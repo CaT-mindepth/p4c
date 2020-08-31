@@ -1,2 +1,32 @@
 1. table dependency from Jose's paper in 2015 NSDI
-2. All action definitions for set_egress_port(bit<9> e_port), set_pkt() 
+==============TABLE DEPENDENCIES===================
+dmac_vlan ---> sample : TODO
+
+==============TABLE INFORMATION====================
+smac_vlan: key: hdr.ethernet.srcAddr (exact), standard_metadata.ingress_port (exact), size: 160000, actions: {}
+dmac_vlan: TODO
+
+==============HEADER INFORMATION====================
+ethernet_t: bit<48> dstAddr, bit<48> srcAddr
+
+=============ACTION DEFINITIONS================
+set_egress_port:
+    action set_egress_port(bit<9> e_port) {
+        standard_metadata.egress_spec = e_port;
+    }
+
+set_pkt:
+    action set_pkt() {
+        @atomic{
+            bit<32> count_tmp;
+            count.read(count_tmp, 0);
+            if (count_tmp == N - 1) {
+                meta.sample = 1;
+                count_tmp = 0;
+            } else {
+                meta.sample = 0;
+                count_tmp = count_tmp + 1;
+            }
+            count.write(0, count_tmp);
+        }
+    }
