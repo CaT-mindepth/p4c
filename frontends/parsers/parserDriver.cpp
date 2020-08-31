@@ -149,11 +149,28 @@ P4ParserDriver::parse(AbstractP4Lexer& lexer, const char* sourceFile,
 /* static */ const IR::P4Program*
 P4ParserDriver::parse(std::istream& in, const char* sourceFile,
                       unsigned sourceLine /* = 1 */) {
+    std::cout << "P4ParserDriver::parse()  sourceFile = " << sourceFile << std::endl;
+    std::cout << "P4ParserDriver::parse()  sourceLine = " << sourceLine << std::endl;
     LOG1("Parsing P4-16 program " << sourceFile);
 
     P4ParserDriver driver;
     P4Lexer lexer(in);
+    // std::cout << "lexer = " << lexer << std::endl;
+    std::cout << "sourceFile = " << sourceFile << std::endl;
+    std::cout << "sourceLine = " << sourceLine << std::endl;
     if (!driver.parse(lexer, sourceFile, sourceLine)) return nullptr;
+    // std::cout << "driver.nodes->srcInfo = " << driver.nodes->srcInfo << std::endl;
+    // std::cout << "driver.nodes.size() = " << driver.nodes->size() << std::endl;
+    // std::cout << "driver.nodes[0].size() = " << driver.nodes[0].size() << std::endl;
+    for (size_t i = 0; i < driver.nodes[0].size(); i++) {
+        // std::cout << "i = " << i << " -----> " << driver.nodes[0][i] << std::endl;
+        //std::cout << "i = " << i << "driver.nodes[0][i]->id = " << driver.nodes[0][i]->id << std::endl;
+        if (driver.nodes[0][i]->node_type_name() == "P4Control" || driver.nodes[0][i]->node_type_name() == "P4Action") {
+            std::cout << "i = " << i << "    driver.nodes[0][i]->getNode() = " << driver.nodes[0][i]->getNode() << std::endl;
+        }
+        // std::cout << "i = " << i << "    driver.nodes[0][i]->node_type_name() = " << driver.nodes[0][i]->node_type_name() << std::endl;
+    }
+    // std::cout << "new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) = " << new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) << std::endl; has some errors
     return new IR::P4Program(driver.nodes->srcInfo, *driver.nodes);
 }
 
@@ -181,6 +198,11 @@ P4ParserDriver::parse(P4AnnotationLexer::Type type,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseExpressionList(const Util::SourceInfo& srcInfo,
                                     const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseExpressionList(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseExpressionList(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::EXPRESSION_LIST, srcInfo, body);
@@ -189,6 +211,11 @@ P4ParserDriver::parseExpressionList(const Util::SourceInfo& srcInfo,
 /* static */ const IR::IndexedVector<IR::NamedExpression>*
 P4ParserDriver::parseKvList(const Util::SourceInfo& srcInfo,
                             const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseKvList(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseKvList(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::IndexedVector<IR::NamedExpression>>(
             P4AnnotationLexer::KV_LIST, srcInfo, body);
@@ -197,6 +224,11 @@ P4ParserDriver::parseKvList(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseConstantList(const Util::SourceInfo& srcInfo,
                                   const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstantList(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstantList(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::INTEGER_LIST, srcInfo, body);
@@ -205,6 +237,11 @@ P4ParserDriver::parseConstantList(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseConstantOrStringLiteralList(const Util::SourceInfo& srcInfo,
                                                  const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstantOrStringLiteralList(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstantOrStringLiteralList(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::INTEGER_OR_STRING_LITERAL_LIST, srcInfo, body);
@@ -213,6 +250,11 @@ P4ParserDriver::parseConstantOrStringLiteralList(const Util::SourceInfo& srcInfo
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseStringLiteralList(const Util::SourceInfo& srcInfo,
                                        const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseStringLiteralList(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseStringLiteralList(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::STRING_LITERAL_LIST, srcInfo, body);
@@ -221,6 +263,11 @@ P4ParserDriver::parseStringLiteralList(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Expression*
 P4ParserDriver::parseExpression(const Util::SourceInfo& srcInfo,
                                 const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseExpression(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseExpression(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Expression>(
             P4AnnotationLexer::EXPRESSION, srcInfo, body);
@@ -229,6 +276,11 @@ P4ParserDriver::parseExpression(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Constant*
 P4ParserDriver::parseConstant(const Util::SourceInfo& srcInfo,
                               const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstant(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstant(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Constant>(
             P4AnnotationLexer::INTEGER, srcInfo, body);
@@ -237,6 +289,11 @@ P4ParserDriver::parseConstant(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Expression*
 P4ParserDriver::parseConstantOrStringLiteral(const Util::SourceInfo& srcInfo,
                                              const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstantOrStringLiteral(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstantOrStringLiteral(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Expression>(
             P4AnnotationLexer::INTEGER_OR_STRING_LITERAL, srcInfo, body);
@@ -245,6 +302,11 @@ P4ParserDriver::parseConstantOrStringLiteral(const Util::SourceInfo& srcInfo,
 /* static */ const IR::StringLiteral*
 P4ParserDriver::parseStringLiteral(const Util::SourceInfo& srcInfo,
                                    const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseStringLiteral(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseStringLiteral(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::StringLiteral>(
             P4AnnotationLexer::STRING_LITERAL, srcInfo, body);
@@ -253,6 +315,11 @@ P4ParserDriver::parseStringLiteral(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseExpressionPair(const Util::SourceInfo& srcInfo,
                                     const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseExpressionPair(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseExpressionPair(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::EXPRESSION_PAIR, srcInfo, body);
@@ -261,6 +328,11 @@ P4ParserDriver::parseExpressionPair(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseConstantPair(const Util::SourceInfo& srcInfo,
                                   const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstantPair(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstantPair(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::INTEGER_PAIR, srcInfo, body);
@@ -269,6 +341,11 @@ P4ParserDriver::parseConstantPair(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseStringLiteralPair(const Util::SourceInfo& srcInfo,
                                        const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseStringLiteralPair(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseStringLiteralPair(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::STRING_LITERAL_PAIR, srcInfo, body);
@@ -277,6 +354,11 @@ P4ParserDriver::parseStringLiteralPair(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseExpressionTriple(const Util::SourceInfo& srcInfo,
                                      const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseExpressionTriple(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseExpressionTriple(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::EXPRESSION_TRIPLE, srcInfo, body);
@@ -285,6 +367,11 @@ P4ParserDriver::parseExpressionTriple(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseConstantTriple(const Util::SourceInfo& srcInfo,
                                     const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseConstantTriple(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseConstantTriple(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::INTEGER_TRIPLE, srcInfo, body);
@@ -293,6 +380,11 @@ P4ParserDriver::parseConstantTriple(const Util::SourceInfo& srcInfo,
 /* static */ const IR::Vector<IR::Expression>*
 P4ParserDriver::parseStringLiteralTriple(const Util::SourceInfo& srcInfo,
                                          const IR::Vector<IR::AnnotationToken>& body) {
+    std::cout << "Begin ---------   P4ParserDriver::parseStringLiteralTriple(  ----------" << std::endl;
+    for (int i = 0; i < body.size(); i++) {
+        std::cout << "body[" << i << "] = " << body[i] << std::endl;
+    }
+    std::cout << "---------   P4ParserDriver::parseStringLiteralTriple(  ---------- End" << std::endl;
     P4ParserDriver driver;
     return driver.parse<IR::Vector<IR::Expression>>(
             P4AnnotationLexer::STRING_LITERAL_TRIPLE, srcInfo, body);

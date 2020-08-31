@@ -29,6 +29,7 @@ void CreateBuiltins::postorder(IR::ActionListElement* element) {
     // actions = { a; b; }
     // becomes
     // action = { a(); b(); }
+    std::cout << "CreateBuiltins::postorder(IR::ActionListElement* element = " << element << std::endl;
     if (element->expression->is<IR::PathExpression>())
         element->expression = new IR::MethodCallExpression(
             element->expression->srcInfo, element->expression,
@@ -36,6 +37,7 @@ void CreateBuiltins::postorder(IR::ActionListElement* element) {
 }
 
 void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
+    std::cout << "CreateBuiltins::postorder(IR::ExpressionValue* expression = " << expression << std::endl;
     // convert a default_action = a; into
     // default_action = a();
     auto prop = findContext<IR::Property>();
@@ -48,6 +50,7 @@ void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
 }
 
 void CreateBuiltins::postorder(IR::Entry* entry) {
+  std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
   // convert a const table entry with action "a;" into "a();"
   if (entry->action->is<IR::PathExpression>())
     entry->action = new IR::MethodCallExpression(
@@ -56,6 +59,7 @@ void CreateBuiltins::postorder(IR::Entry* entry) {
 }
 
 void CreateBuiltins::postorder(IR::ParserState* state) {
+    std::cout << "CreateBuiltins::postorder(IR::ParserState* state = " << state << std::endl;
     if (state->selectExpression == nullptr) {
         warning(ErrorType::WARN_PARSER_TRANSITION, "%1%: implicit transition to `reject'", state);
         state->selectExpression = new IR::PathExpression(IR::ParserState::reject);
@@ -63,6 +67,7 @@ void CreateBuiltins::postorder(IR::ParserState* state) {
 }
 
 void CreateBuiltins::postorder(IR::ActionList* actions) {
+    std::cout << "CreateBuiltins::postorder(IR::ActionList* actions = " << actions << std::endl;
     if (!addNoAction)
         return;
     auto decl = actions->getDeclaration(P4::P4CoreLibrary::instance.noAction.str());
@@ -85,6 +90,7 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
 }
 
 void CreateBuiltins::postorder(IR::TableProperties* properties) {
+    std::cout << "CreateBuiltins::postorder(IR::TableProperties* properties = " << properties << std::endl;
     if (!addNoAction)
         return;
     auto act = new IR::PathExpression(P4::P4CoreLibrary::instance.noAction.Id(properties->srcInfo));

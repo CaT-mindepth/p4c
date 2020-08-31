@@ -3,6 +3,7 @@
 namespace P4 {
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
+    // std::cout << "DoInstantiateCalls::postorder(IR::P4Parser* parser = " << parser << std::endl;
     insert.append(parser->parserLocals);
     parser->parserLocals = insert;
     insert.clear();
@@ -10,6 +11,7 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
 }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
+    // std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control = " << control << std::endl;
     insert.append(control->controlLocals);
     control->controlLocals = insert;
     insert.clear();
@@ -17,6 +19,7 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
 }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::MethodCallExpression* expression) {
+    // std::cout << "DoInstantiateCalls::postorder(IR::MethodCallExpression* expression = " << expression << std::endl;
     // Identify type.apply(...) methods
     auto mem = expression->method->to<IR::Member>();
     if (mem == nullptr)

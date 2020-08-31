@@ -84,6 +84,7 @@ class PrettyPrint : public Inspector {
         inputfile = options.file;
     }
     bool preorder(const IR::P4Program* program) override {
+        // std::cout << "preorder(const IR::P4Program* program = " << program << std::endl;
         if (!ppfile.isNullOrEmpty()) {
             Util::PathName path(ppfile);
             std::ostream *ppStream = openFile(path.toString(), true);
@@ -197,6 +198,8 @@ const IR::P4Program *FrontEnd::run(const CompilerOptions &options, const IR::P4P
         new HierarchicalNames(),
         new FrontEndLast(),
     };
+    // std::cout << "options.listFrontendPasses = " << options.listFrontendPasses << std::endl;
+    // output is 0
     if (options.listFrontendPasses) {
         for (auto it : frontendPasses) {
             if (it != nullptr) {
@@ -208,6 +211,8 @@ const IR::P4Program *FrontEnd::run(const CompilerOptions &options, const IR::P4P
 
     PassManager passes(frontendPasses);
 
+    // std::cout << "options.excludeFrontendPasses = " << options.excludeFrontendPasses << std::endl;
+    // output is 0
     if (options.excludeFrontendPasses) {
        passes.removePasses(options.passesToExcludeFrontend);
     }

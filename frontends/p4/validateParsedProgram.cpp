@@ -106,6 +106,7 @@ void ValidateParsedProgram::container(const IR::IContainer* type) {
 
 /// Tables must have an 'actions' property.
 void ValidateParsedProgram::postorder(const IR::P4Table* t) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::P4Table = " << t << std::endl;
     auto ac = t->getActionList();
     if (ac == nullptr)
         ::error(ErrorType::ERR_EXPECTED,
@@ -140,7 +141,9 @@ void ValidateParsedProgram::distinctParameters(
 }
 
 /// Cannot invoke constructors in actions
+
 void ValidateParsedProgram::postorder(const IR::ConstructorCallExpression* expression) {
+    std::cout << "ValidateParsedProgram::postorder(const IR::ConstructorCallExpression* expression) = " << expression << std::endl;
     auto inAction = findContext<IR::P4Action>();
     if (inAction != nullptr)
         ::error(ErrorType::ERR_INVALID,
@@ -149,6 +152,7 @@ void ValidateParsedProgram::postorder(const IR::ConstructorCallExpression* expre
 
 /// Variable names cannot be underscore
 void ValidateParsedProgram::postorder(const IR::Declaration_Variable* decl) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::Declaration_Variable* decl = " << decl << std::endl;
     if (decl->name.isDontCare())
         ::error(ErrorType::ERR_INVALID, "%1%: invalid variable name.", decl);
 }
@@ -156,6 +160,7 @@ void ValidateParsedProgram::postorder(const IR::Declaration_Variable* decl) {
 /// Instance names cannot be don't care
 /// Do not declare instances in apply {} blocks, parser states or actions
 void ValidateParsedProgram::postorder(const IR::Declaration_Instance* decl) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::Declaration_Instance* decl = " << decl << std::endl;
     if (decl->name.isDontCare())
         ::error(ErrorType::ERR_INVALID, "%1%: invalid instance name.", decl);
     if (findContext<IR::BlockStatement>() &&  // we're looking for the apply block
@@ -176,6 +181,7 @@ void ValidateParsedProgram::postorder(const IR::Declaration_Instance* decl) {
 
 /// Constant names cannot be underscore
 void ValidateParsedProgram::postorder(const IR::Declaration_Constant* decl) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::Declaration_Constant* decl = " << decl << std::endl;
     if (decl->name.isDontCare())
         ::error(ErrorType::ERR_INVALID, "%1%: invalid constant name.", decl);
 }
@@ -188,6 +194,7 @@ void ValidateParsedProgram::postorder(const IR::Declaration_Constant* decl) {
   * handling with the rest of the properties defined for tables.
   */
 void ValidateParsedProgram::postorder(const IR::EntriesList* l) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::EntriesList* l = " << l << std::endl;
     auto table = findContext<IR::P4Table>();
     if (table == nullptr) {
         ::error(ErrorType::ERR_INVALID,
@@ -202,6 +209,7 @@ void ValidateParsedProgram::postorder(const IR::EntriesList* l) {
 /// Switch statements are not allowed in actions.
 /// Default label in switch statement is always the last one.
 void ValidateParsedProgram::postorder(const IR::SwitchStatement* statement) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::SwitchStatement* statement = " << statement << std::endl;
     auto inAction = findContext<IR::P4Action>();
     if (inAction != nullptr)
         ::error(ErrorType::ERR_INVALID,
@@ -219,6 +227,7 @@ void ValidateParsedProgram::postorder(const IR::SwitchStatement* statement) {
 
 /// Return statements are not allowed in parsers
 void ValidateParsedProgram::postorder(const IR::ReturnStatement* statement) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::ReturnStatement* statement = " << statement << std::endl;
     auto inParser = findContext<IR::P4Parser>();
     if (inParser != nullptr)
         ::error(ErrorType::ERR_INVALID,
@@ -227,6 +236,7 @@ void ValidateParsedProgram::postorder(const IR::ReturnStatement* statement) {
 
 /// Exit statements are not allowed in parsers or functions
 void ValidateParsedProgram::postorder(const IR::ExitStatement* statement) {
+    std::cout << "void ValidateParsedProgram::postorder(const IR::ExitStatement* statement = " << statement << std::endl;
     auto inParser = findContext<IR::P4Parser>();
     if (inParser != nullptr)
         ::error(ErrorType::ERR_INVALID,
@@ -237,9 +247,11 @@ void ValidateParsedProgram::postorder(const IR::ExitStatement* statement) {
 }
 
 void ValidateParsedProgram::postorder(const IR::P4Program* program) {
+    //std::cout << "void ValidateParsedProgram::postorder(const IR::P4Program* program = " << program << std::endl;
     IR::IndexedVector<IR::Node> declarations;
     for (auto decl : *program->getDeclarations()) {
         cstring name = decl->getName();
+        // std::cout << "name = " << name << std::endl;
         auto existing = declarations.getDeclaration(name);
         if (existing != nullptr) {
             if (!existing->is<IR::IFunctional>() || !decl->is<IR::IFunctional>()

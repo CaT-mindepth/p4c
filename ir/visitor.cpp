@@ -135,20 +135,24 @@ class Visitor::ChangeTracker {
 };
 
 Visitor::profile_t Visitor::init_apply(const IR::Node *root) {
+    // std::cout << "root = " << *root << std::endl;
     if (ctxt) BUG("previous use of visitor did not clean up properly");
     ctxt = nullptr;
     if (joinFlows) init_join_flows(root);
     return profile_t(*this);
 }
 Visitor::profile_t Modifier::init_apply(const IR::Node *root) {
+    // std::cout << "Modifier -------------- root = " << *root << std::endl;
     auto rv = Visitor::init_apply(root);
     visited = new ChangeTracker();
     return rv; }
 Visitor::profile_t Inspector::init_apply(const IR::Node *root) {
+    // std::cout << "Inspector -------------- root = " << *root << std::endl;
     auto rv = Visitor::init_apply(root);
     visited = new visited_t();
     return rv; }
 Visitor::profile_t Transform::init_apply(const IR::Node *root) {
+    // std::cout << "Transform -------------- root = " << *root << std::endl;
     auto rv = Visitor::init_apply(root);
     visited = new ChangeTracker();
     return rv; }

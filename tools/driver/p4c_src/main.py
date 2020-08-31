@@ -244,9 +244,10 @@ def main():
     if backend == None:
         parser.error("Unknown backend: {}-{}".format(str(opts.target),
                                                      str(opts.arch)))
-
     # set all configuration and command line options for backend
     backend.process_command_line_options(opts)
     # run all commands
     rc = backend.run()
+    print("----------------------")
+    exit(0)
     sys.exit(rc)

@@ -273,7 +273,8 @@ class BackendDriver:
         # set output directory
         if not os.path.exists(self._output_directory):
             os.makedirs(self._output_directory)
-
+   
+        # print("self._commandsEnabled =", self._commandsEnabled)
         for c in self._commandsEnabled:
 
             # run the setup for the command
@@ -285,8 +286,9 @@ class BackendDriver:
                 print("{}: command not found".format(cmd[0]), file=sys.stderr)
                 sys.exit(1)
 
-            rc = self.runCmd(c, cmd)
-
+            # print("c = ", c)
+            # print("cmd = ", cmd)
+            rc = self.runCmd(c, cmd) ## generate the p4i file
             # run the cleanup whether the command succeeded or failed
             postrc = self.postRun(c)
 

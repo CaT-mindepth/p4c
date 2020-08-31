@@ -23,6 +23,7 @@ limitations under the License.
 #include "frontends/p4/frontend.h"
 #include "lib/error.h"
 #include "lib/source_file.h"
+#include <iostream>
 
 namespace IR {
 class P4Program;
@@ -82,7 +83,9 @@ const IR::P4Program* parseP4File(CompilerOptions& options) {
         if (::errorCount() > 0 || in == nullptr)
             return nullptr;
     }
+    std::cout << "options.isv1() = " << options.isv1() << std::endl;
 
+    std::cout << "options.file = " << options.file << std::endl;
     auto result = options.isv1()
                 ? parseV1Program<FILE*, C>(in, options.file, 1, options.getDebugHook())
                 : P4ParserDriver::parse(in, options.file);
