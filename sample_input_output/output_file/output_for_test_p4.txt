@@ -1,13 +1,20 @@
 1. table dependency from Jose's paper in 2015 NSDI
 ==============TABLE DEPENDENCIES===================
-dmac_vlan ---> sample : TODO
+dmac_vlan ---> sample : Successor dependency (Table dmac_vlan's match result will decide whether Table sample should be executed or not)
 
 ==============TABLE INFORMATION====================
 smac_vlan: key: hdr.ethernet.srcAddr (exact), standard_metadata.ingress_port (exact), size: 160000, actions: {}
-dmac_vlan: TODO
+dmac_vlan: key: hdr.ethernet.dstAddr (exact), hdr.vlan_tag_t[0].vid (exact), standard_metadata.ingress_port (exact), size: 16000, actions: {set_egress_port}
+sample: key: {}, actions: {set_pkt}
 
 ==============HEADER INFORMATION====================
 ethernet_t: bit<48> dstAddr, bit<48> srcAddr
+hop_metadata_t: bit<12> vrf, bit<64> ipv6_prefix, bit<16> next_hop_index, bit<16> mcast_grp, bit<4> urpf_fail, bit<8> drop_reason
+vlan_tag_t: bit<8> vid
+
+==============STRUCT INFORMATION====================
+headers: vlan_tag_t[2] vlan_tag_, ethernet_t ethernet
+metadata: hop_metadata_t hop_metadata, bit<32> sample
 
 =============ACTION DEFINITIONS================
 set_egress_port:
