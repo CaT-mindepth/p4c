@@ -69,7 +69,7 @@ control ingress(inout headers hdr,
     table dmac_vlan {
         key = {
             hdr.ethernet.dstAddr : exact;
-            hdr.vlan_tag_t[0].vid : exact;
+            hdr.vlan_tag_[0].vid : exact;
             standard_metadata.ingress_port : exact;
         }
         actions = {
