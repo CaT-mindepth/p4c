@@ -87,7 +87,7 @@ bool FindGlobalActionUses::preorder(const IR::PathExpression* path) {
 }
 
 const IR::Node* LocalizeActions::postorder(IR::P4Control* control) {
-    std::cout << "LocalizeActions::postorder(IR::P4Control* control = " << control << std::endl;
+    // std::cout << "LocalizeActions::postorder(IR::P4Control* control = " << control << std::endl;
     auto actions = ::get(repl->repl, getOriginal<IR::P4Control>());
     if (actions == nullptr)
         return control;
@@ -104,7 +104,7 @@ const IR::Node* LocalizeActions::postorder(IR::P4Control* control) {
 }
 
 const IR::Node* LocalizeActions::postorder(IR::PathExpression* expression) {
-    std::cout << "LocalizeActions::postorder(IR::PathExpression* expression = " << expression << std::endl;
+    // std::cout << "LocalizeActions::postorder(IR::PathExpression* expression = " << expression << std::endl;
     auto control = findOrigCtxt<IR::P4Control>();
     if (control == nullptr)
         return expression;

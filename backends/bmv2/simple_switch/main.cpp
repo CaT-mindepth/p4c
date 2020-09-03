@@ -42,7 +42,7 @@ int main(int argc, char *const argv[]) {
         std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
     }
     setup_gc_logging();
-    std::cout << "Duandian 1\n" << std::endl;
+    std::cout << "Breakpoint 1\n" << std::endl;
 
     AutoCompileContext autoBMV2Context(new BMV2::SimpleSwitchContext);
     auto& options = BMV2::SimpleSwitchContext::get().options();
@@ -54,12 +54,12 @@ int main(int argc, char *const argv[]) {
             if (options.loadIRFromJson == false)
                     options.setInputFile();
     }
-    std::cout << "Duandian 2\n" << std::endl;
+    std::cout << "Breakpoint 2\n" << std::endl;
     if (::errorCount() > 0)
         return 1;
 
     auto hook = options.getDebugHook();
-    std::cout << "Duandian 3\n" << std::endl;
+    std::cout << "Breakpoint 3\n" << std::endl;
 
     // BMV2 is required for compatibility with the previous compiler.
     options.preprocessor_options += " -D__TARGET_BMV2__";
@@ -75,12 +75,12 @@ int main(int argc, char *const argv[]) {
         // if (program == nullptr || ::errorCount() > 0)
         //    return 1;
         // std::cout << "program = " << program << std::endl;
-        std::cout << "Duandian 4\n" << std::endl;
+        std::cout << "Breakpoint 4\n" << std::endl;
         try {
             P4::P4COptionPragmaParser optionsPragmaParser;
             program->apply(P4::ApplyOptionsPragmas(optionsPragmaParser));
             // std::cout << "program = " << program << std::endl;
-            std::cout << "Duandian 5\n" << std::endl;
+            std::cout << "Breakpoint 5\n" << std::endl;
             P4::FrontEnd frontend;
             frontend.addDebugHook(hook);
             program = frontend.run(options, program);

@@ -83,6 +83,8 @@ void CreateBuiltins::postorder(IR::ActionList* actions) {
 }
 
 bool CreateBuiltins::preorder(IR::P4Table* table) {
+    std::cout << "CreateBuiltins::preorder(IR::P4Table* table->getKey( = " << table->getKey() << std::endl;
+    std::cout << "CreateBuiltins::preorder(IR::P4Table* table->getSizeProperty( =" << table->getSizeProperty() << std::endl;
     addNoAction = false;
     if (table->getDefaultAction() == nullptr)
         addNoAction = true;

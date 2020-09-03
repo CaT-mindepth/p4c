@@ -378,7 +378,7 @@ void ResolveReferences::postorder(const IR::TableProperties *p) {
 }
 
 bool ResolveReferences::preorder(const IR::P4Action *c) {
-    std::cout << "ResolveReferences::preorder(const IR::P4Action *c = " << c << std::endl;
+    // std::cout << "ResolveReferences::preorder(const IR::P4Action *c = " << c << std::endl;
     refMap->usedName(c->name.name);
     addToContext(c->parameters);
     addToContext(c);
@@ -386,7 +386,7 @@ bool ResolveReferences::preorder(const IR::P4Action *c) {
 }
 
 void ResolveReferences::postorder(const IR::P4Action *c) {
-    std::cout << "ResolveReferences::postorder(const IR::P4Action *c = " << c << std::endl;
+    // std::cout << "ResolveReferences::postorder(const IR::P4Action *c = " << c << std::endl;
     removeFromContext(c);
     removeFromContext(c->parameters);
 }
