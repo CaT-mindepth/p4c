@@ -259,7 +259,7 @@ void CompilerOptions::setInputFile() {
         exit(1);
     } else {
         file = remainingOptions.at(0);
-        std::cout << "file = remainingOptions.at(0) = " << file << std::endl;
+        // std::cout << "file = remainingOptions.at(0) = " << file << std::endl;
     }
 }
 
@@ -325,15 +325,15 @@ std::vector<const char*>* CompilerOptions::process(int argc, char* const argv[])
             setIncludePathIfExists(p4_14includePath, buffer); }
     }
 
-    std::cout << "argc = " << argc << std::endl;
-    for (int i = 0; i < argc; i++) {
-        std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
-    }
+    // std::cout << "argc = " << argc << std::endl;
+    // for (int i = 0; i < argc; i++) {
+    ///     std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
+   //  }
     auto remainingOptions = Util::Options::process(argc, argv);
     validateOptions();
-    for (int i = 0; i < remainingOptions->size(); i++) {
-        std::cout << "i = " << i << " remainingOptions[i] = " << remainingOptions[i] << std::endl;
-    }
+    // for (int i = 0; i < remainingOptions->size(); i++) {
+    //     std::cout << "i = " << i << " remainingOptions[i] = " << remainingOptions[i] << std::endl;
+    // }
     return remainingOptions;
 }
 

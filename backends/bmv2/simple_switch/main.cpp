@@ -37,10 +37,10 @@ limitations under the License.
 #include "fstream"
 
 int main(int argc, char *const argv[]) {
-    std::cout << "hello argc = " << argc << std::endl;
-    for (int i = 0; i < argc; i++) {
-        std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
-    }
+    // std::cout << "hello argc = " << argc << std::endl;
+    // for (int i = 0; i < argc; i++) {
+    //     std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
+    // }
     setup_gc_logging();
     std::cout << "Breakpoint 1\n" << std::endl;
 

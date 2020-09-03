@@ -37,7 +37,7 @@ void CreateBuiltins::postorder(IR::ActionListElement* element) {
 }
 
 void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
-    std::cout << "CreateBuiltins::postorder(IR::ExpressionValue* expression = " << expression << std::endl;
+    // std::cout << "CreateBuiltins::postorder(IR::ExpressionValue* expression = " << expression << std::endl;
     // convert a default_action = a; into
     // default_action = a();
     auto prop = findContext<IR::Property>();
@@ -92,7 +92,7 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
 }
 
 void CreateBuiltins::postorder(IR::TableProperties* properties) {
-    std::cout << "CreateBuiltins::postorder(IR::TableProperties* properties = " << properties << std::endl;
+    // std::cout << "CreateBuiltins::postorder(IR::TableProperties* properties = " << properties << std::endl;
     if (!addNoAction)
         return;
     auto act = new IR::PathExpression(P4::P4CoreLibrary::instance.noAction.Id(properties->srcInfo));

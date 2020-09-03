@@ -160,6 +160,7 @@ P4ParserDriver::parse(std::istream& in, const char* sourceFile,
     // std::cout << "driver.nodes->srcInfo = " << driver.nodes->srcInfo << std::endl;
     // std::cout << "driver.nodes.size() = " << driver.nodes->size() << std::endl;
     // std::cout << "driver.nodes[0].size() = " << driver.nodes[0].size() << std::endl;
+    std::cout << "Output the type for each node. For future purpose." << std::endl;
     for (size_t i = 0; i < driver.nodes[0].size(); i++) {
         // std::cout << "i = " << i << " -----> " << driver.nodes[0][i] << std::endl;
         //std::cout << "i = " << i << "driver.nodes[0][i]->id = " << driver.nodes[0][i]->id << std::endl;
