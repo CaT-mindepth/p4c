@@ -20,6 +20,7 @@ limitations under the License.
 
 namespace P4 {
 void CreateBuiltins::postorder(IR::P4Parser* parser) {
+    std::cout << "=====================Table Info========================" << std::endl;
     parser->states.push_back(new IR::ParserState(IR::ParserState::accept, nullptr));
     parser->states.push_back(new IR::ParserState(IR::ParserState::reject, nullptr));
 }
@@ -83,7 +84,6 @@ void CreateBuiltins::postorder(IR::ActionList* actions) {
 }
 
 bool CreateBuiltins::preorder(IR::P4Table* table) {
-    std::cout << "Table Info:" << std::endl;
     std::cout << "table name is " << table->getName() << std::endl;
     if (table->getKey()->keyElements.size() != 0) {
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {

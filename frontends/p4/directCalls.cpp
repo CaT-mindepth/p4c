@@ -4,6 +4,7 @@ namespace P4 {
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
     // std::cout << "DoInstantiateCalls::postorder(IR::P4Parser* parser = " << parser << std::endl;
+    std::cout << "=====================Control Block Info========================" << std::endl;
     insert.append(parser->parserLocals);
     parser->parserLocals = insert;
     insert.clear();
@@ -11,8 +12,9 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
 }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
-    std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control->type = " << control->type << std::endl;
-    std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control->body = " << control->body << std::endl;
+    std::cout << "control block name is " << control->getName() << std::endl;
+    std::cout << "control block body is " << control->body << std::endl;
+    std::cout << "\n";
     insert.append(control->controlLocals);
     control->controlLocals = insert;
     insert.clear();
