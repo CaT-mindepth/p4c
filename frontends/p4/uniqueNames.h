@@ -21,6 +21,8 @@ limitations under the License.
 #include "frontends/common/resolveReferences/resolveReferences.h"
 #include "frontends/p4/typeMap.h"
 
+#include <vector>
+
 namespace P4 {
 
 class RenameMap {
@@ -32,6 +34,7 @@ class RenameMap {
     std::map<const IR::MethodCallExpression*, const IR::P4Action*> actionCall;
 
  public:
+    std::vector<cstring> exist_act_vec;
     void setNewName(const IR::IDeclaration* decl, cstring name);
     cstring getName(const IR::IDeclaration* decl) const {
         CHECK_NULL(decl);
