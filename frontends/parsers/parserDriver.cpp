@@ -149,8 +149,6 @@ P4ParserDriver::parse(AbstractP4Lexer& lexer, const char* sourceFile,
 /* static */ const IR::P4Program*
 P4ParserDriver::parse(std::istream& in, const char* sourceFile,
                       unsigned sourceLine /* = 1 */) {
-    std::cout << "P4ParserDriver::parse()  sourceFile = " << sourceFile << std::endl;
-    std::cout << "P4ParserDriver::parse()  sourceLine = " << sourceLine << std::endl;
     LOG1("Parsing P4-16 program " << sourceFile);
 
     P4ParserDriver driver;
@@ -162,12 +160,19 @@ P4ParserDriver::parse(std::istream& in, const char* sourceFile,
     // std::cout << "driver.nodes[0].size() = " << driver.nodes[0].size() << std::endl;
     // std::cout << "Output the type for each node. For future purpose." << std::endl;
     // for (size_t i = 0; i < driver.nodes[0].size(); i++) {
-        // std::cout << "i = " << i << " -----> " << driver.nodes[0][i] << std::endl;
         //std::cout << "i = " << i << "driver.nodes[0][i]->id = " << driver.nodes[0][i]->id << std::endl;
         // if (driver.nodes[0][i]->node_type_name() == "P4Control" || driver.nodes[0][i]->node_type_name() == "P4Action") {
         //     std::cout << "i = " << i << "    driver.nodes[0][i]->getNode() = " << driver.nodes[0][i]->getNode() << std::endl;
         // }
-        // std::cout << "i = " << i << "    driver.nodes[0][i]->node_type_name() = " << driver.nodes[0][i]->node_type_name() << std::endl;
+        // if (driver.nodes[0][i]->node_type_name() == "Type_Header") {
+            // std::cout << dbp(driver.nodes[0][i]) << std::endl;
+            // std::cout << "i = " << i << " -----> " << driver.nodes[0][i]->getNode() << std::endl;
+            // std::cout << "driver.nodes[0][i]->getName() = " << driver.nodes[0][i]->name << std::endl;
+            // std::cout << "i = " << i << "    driver.nodes[0][i]->num_children() = " << driver.nodes[0][i]->num_children() << std::endl;
+        // } else if (driver.nodes[0][i]->node_type_name() == "Type_Struct") {
+        //     std::cout << "i = " << i << " -----> " << driver.nodes[0][i] << std::endl;
+        // }
+        // std::cout << "i = " << i << "    driver.nodes[0][i]->num_children() = " << driver.nodes[0][i]->num_children() << std::endl;
     // }
     // std::cout << "new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) = " << new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) << std::endl; has some errors
     return new IR::P4Program(driver.nodes->srcInfo, *driver.nodes);

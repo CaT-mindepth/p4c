@@ -50,7 +50,6 @@ int main(int argc, char *const argv[]) {
     options.compilerVersion = BMV2_SIMPLESWITCH_VERSION_STRING;
 
     if (options.process(argc, argv) != nullptr) {
-            std::cout << "options.process(argc, argv) != nullptr is true" << std::endl;
             if (options.loadIRFromJson == false)
                     options.setInputFile();
     }
@@ -69,7 +68,6 @@ int main(int argc, char *const argv[]) {
 
 
     if (options.loadIRFromJson == false) {
-        std::cout << "(options.loadIRFromJson == false) = " << (options.loadIRFromJson == false) << std::endl;
         program = P4::parseP4File(options);
         // std::cout << "program = " << program << std::endl;
         // if (program == nullptr || ::errorCount() > 0)

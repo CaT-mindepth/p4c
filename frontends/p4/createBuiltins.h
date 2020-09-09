@@ -39,6 +39,8 @@ class CreateBuiltins final : public Modifier {
     bool preorder(IR::P4Table* table) override;
     void postorder(IR::ActionList* actions) override;
     void postorder(IR::TableProperties* properties) override;
+    void postorder(IR::Type_Struct* type_struct);
+    void postorder(IR::Type_Header* type_header);
 };
 }  // namespace P4
 
