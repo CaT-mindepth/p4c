@@ -11,7 +11,8 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
 }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
-    // std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control = " << control << std::endl;
+    std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control->type = " << control->type << std::endl;
+    std::cout << "DoInstantiateCalls::postorder(IR::P4Control* control->body = " << control->body << std::endl;
     insert.append(control->controlLocals);
     control->controlLocals = insert;
     insert.clear();

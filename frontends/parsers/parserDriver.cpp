@@ -160,15 +160,15 @@ P4ParserDriver::parse(std::istream& in, const char* sourceFile,
     // std::cout << "driver.nodes->srcInfo = " << driver.nodes->srcInfo << std::endl;
     // std::cout << "driver.nodes.size() = " << driver.nodes->size() << std::endl;
     // std::cout << "driver.nodes[0].size() = " << driver.nodes[0].size() << std::endl;
-    std::cout << "Output the type for each node. For future purpose." << std::endl;
-    for (size_t i = 0; i < driver.nodes[0].size(); i++) {
+    // std::cout << "Output the type for each node. For future purpose." << std::endl;
+    // for (size_t i = 0; i < driver.nodes[0].size(); i++) {
         // std::cout << "i = " << i << " -----> " << driver.nodes[0][i] << std::endl;
         //std::cout << "i = " << i << "driver.nodes[0][i]->id = " << driver.nodes[0][i]->id << std::endl;
         // if (driver.nodes[0][i]->node_type_name() == "P4Control" || driver.nodes[0][i]->node_type_name() == "P4Action") {
         //     std::cout << "i = " << i << "    driver.nodes[0][i]->getNode() = " << driver.nodes[0][i]->getNode() << std::endl;
         // }
-        std::cout << "i = " << i << "    driver.nodes[0][i]->node_type_name() = " << driver.nodes[0][i]->node_type_name() << std::endl;
-    }
+        // std::cout << "i = " << i << "    driver.nodes[0][i]->node_type_name() = " << driver.nodes[0][i]->node_type_name() << std::endl;
+    // }
     // std::cout << "new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) = " << new IR::P4Program(driver.nodes->srcInfo, *driver.nodes) << std::endl; has some errors
     return new IR::P4Program(driver.nodes->srcInfo, *driver.nodes);
 }

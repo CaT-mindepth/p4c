@@ -29,7 +29,7 @@ void CreateBuiltins::postorder(IR::ActionListElement* element) {
     // actions = { a; b; }
     // becomes
     // action = { a(); b(); }
-    std::cout << "CreateBuiltins::postorder(IR::ActionListElement* element = " << element << std::endl;
+    // std::cout << "CreateBuiltins::postorder(IR::ActionListElement* element = " << element << std::endl;
     if (element->expression->is<IR::PathExpression>())
         element->expression = new IR::MethodCallExpression(
             element->expression->srcInfo, element->expression,
@@ -50,7 +50,7 @@ void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
 }
 
 void CreateBuiltins::postorder(IR::Entry* entry) {
-  std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
+  // std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
   // convert a const table entry with action "a;" into "a();"
   if (entry->action->is<IR::PathExpression>())
     entry->action = new IR::MethodCallExpression(
@@ -59,7 +59,7 @@ void CreateBuiltins::postorder(IR::Entry* entry) {
 }
 
 void CreateBuiltins::postorder(IR::ParserState* state) {
-    std::cout << "CreateBuiltins::postorder(IR::ParserState* state = " << state << std::endl;
+    // std::cout << "CreateBuiltins::postorder(IR::ParserState* state = " << state << std::endl;
     if (state->selectExpression == nullptr) {
         warning(ErrorType::WARN_PARSER_TRANSITION, "%1%: implicit transition to `reject'", state);
         state->selectExpression = new IR::PathExpression(IR::ParserState::reject);
@@ -67,7 +67,7 @@ void CreateBuiltins::postorder(IR::ParserState* state) {
 }
 
 void CreateBuiltins::postorder(IR::ActionList* actions) {
-    std::cout << "CreateBuiltins::postorder(IR::ActionList* actions = " << actions << std::endl;
+    // std::cout << "CreateBuiltins::postorder(IR::ActionList* actions = " << actions << std::endl;
     if (!addNoAction)
         return;
     auto decl = actions->getDeclaration(P4::P4CoreLibrary::instance.noAction.str());
@@ -83,8 +83,25 @@ void CreateBuiltins::postorder(IR::ActionList* actions) {
 }
 
 bool CreateBuiltins::preorder(IR::P4Table* table) {
-    std::cout << "CreateBuiltins::preorder(IR::P4Table* table->getKey( = " << table->getKey() << std::endl;
-    std::cout << "CreateBuiltins::preorder(IR::P4Table* table->getSizeProperty( =" << table->getSizeProperty() << std::endl;
+    std::cout << "Table Info:" << std::endl;
+    std::cout << "table name is " << table->getName() << std::endl;
+    if (table->getKey()->keyElements.size() != 0) {
+        for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
+            std::cout << "no. " << (i + 1) << " key is " << table->getKey()->keyElements[i]->expression 
+            << " with match type " << table->getKey()->keyElements[i]->matchType << std::endl;
+        }
+    } else 
+        std::cout << "this table does not have match keys." << std::endl;
+    if (table->getSizeProperty() != nullptr)
+        std::cout << "table size is " << table->getSizeProperty() << std::endl;
+    else 
+        std::cout << "this table does not have size." << std::endl;
+    if (table->getActionList()->size() != 0) 
+        std::cout << "table action list is " << table->getActionList() << std::endl;
+    else
+        std::cout << "this table does not have actions." << std::endl;
+    std::cout << std::endl;
+
     addNoAction = false;
     if (table->getDefaultAction() == nullptr)
         addNoAction = true;
