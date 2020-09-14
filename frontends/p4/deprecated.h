@@ -36,6 +36,7 @@ class CheckDeprecated : public Inspector {
 
     bool preorder(const IR::PathExpression* path) override;
     bool preorder(const IR::Type_Name* name) override;
+    bool preorder(const IR::P4Action* action) override;
 };
 
 class Deprecated : public PassManager {

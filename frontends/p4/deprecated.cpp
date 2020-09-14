@@ -37,6 +37,19 @@ void CheckDeprecated::warnIfDeprecated(
               errorNode, annotated->getNode(), message);
 }
 
+bool CheckDeprecated::preorder(const IR::P4Action* action) {
+    std::cout << "Action name = " << action->getName() << std::endl;
+    std::cout << "Action body = " << action->body << std::endl;
+    for (int i = 0; i < action->body->components.size(); i++) { 
+        std::cout << "Action action->body->components[i]->getNode()->node_type_name() = " << action->body->components[i]->getNode()->node_type_name() << std::endl;
+        if (action->body->components[i]->getNode()->node_type_name() == "BlockStatement") {
+            std::cout << "action->body->components[i] = " << action->body->components[i] << std::endl; 
+            std::cout << std::endl;
+        }
+    }
+    return true;
+}
+
 bool CheckDeprecated::preorder(const IR::PathExpression* expression) {
     auto decl = refMap->getDeclaration(expression->path);
     CHECK_NULL(decl);

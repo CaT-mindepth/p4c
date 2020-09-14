@@ -84,6 +84,7 @@ int main(int argc, char *const argv[]) {
             program = frontend.run(options, program);
             // std::cout << "program = " << program << std::endl;
         } catch (const std::exception &bug) {
+            std::cout << "Breakpoint 6\n" << std::endl;
             std::cerr << bug.what() << std::endl;
             return 1;
         }
@@ -108,7 +109,6 @@ int main(int argc, char *const argv[]) {
     P4::serializeP4RuntimeIfRequired(program, options);
     if (::errorCount() > 0)
         return 1;
-
     BMV2::SimpleSwitchMidEnd midEnd(options);
     midEnd.addDebugHook(hook);
     try {
@@ -146,6 +146,5 @@ int main(int argc, char *const argv[]) {
             out->flush();
         }
     }
-
     return ::errorCount() > 0;
 }

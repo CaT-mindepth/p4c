@@ -42,21 +42,6 @@ void RenameMap::markActionCall(const IR::P4Action* action, const IR::MethodCallE
 }
 
 void RenameMap::foundInTable(const IR::P4Action* action) {
-    // TODO: find a better way to get the action portion
-    std::vector<cstring>::iterator it;
-    it = find(exist_act_vec.begin(), exist_act_vec.end(), action->getName().toString());
-    // std::cout << (it == exist_act_vec.end()) << std::endl;
-    // std::cout << "==================" << std::endl;
-    // for (int i = 0; i < exist_act_vec.size(); i++) {
-    //     std::cout << exist_act_vec[i] << std::endl;
-    // }
-    // std::cout << "==================" << std::endl;
-    if (action->getName().toString() != "NoAction" and it == exist_act_vec.end()) {
-        exist_act_vec.push_back(action->getName().toString());
-        std::cout << "Action name is: " << action->getName().toString() << std::endl;
-        std::cout << "Action code is: " << action->body << std::endl;
-        std::cout << std::endl;
-    }
     inTable.emplace(action);
 }
 

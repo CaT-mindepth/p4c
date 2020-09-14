@@ -19,8 +19,8 @@ limitations under the License.
 #include "frontends/p4/coreLibrary.h"
 
 namespace P4 {
+
 void CreateBuiltins::postorder(IR::Type_Header* type_header) {
-    std::cout << "void CreateBuiltins::postorder(IR::Type_Header* type_header = " << type_header << std::endl;
     std::cout << "Header name is " << type_header->getName() << std::endl;
     std::cout << "type_header->width_bits() = " << type_header->width_bits() << std::endl;
     for (int i = 0; i < type_header->fields.size(); i++) {
@@ -30,7 +30,6 @@ void CreateBuiltins::postorder(IR::Type_Header* type_header) {
 }
 
 void CreateBuiltins::postorder(IR::Type_Struct* type_struct) {
-    std::cout << "void CreateBuiltins::postorder(IR::IR::Type_Struct* type_struct = " << type_struct << std::endl;
     std::cout << "Struct name is " << type_struct->getName() << std::endl;
     for (int i = 0; i < type_struct->fields.size(); i++) {
         std::cout << type_struct->fields[i] << std::endl;
