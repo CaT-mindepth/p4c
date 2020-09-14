@@ -19,6 +19,19 @@ limitations under the License.
 
 namespace P4 {
 
+class CheckGetMember : public Inspector {
+    const ReferenceMap* refMap;
+public:
+    explicit CheckGetMember(const ReferenceMap* refMap): refMap(refMap)
+    { CHECK_NULL(refMap); setName("CheckGetMember"); }
+
+//    void warnIfGetMember(const IR::IAnnotated* declaration, const IR::Node* errorNode) {};
+
+    bool preorder(const IR::PathExpression* path) override {std::cout << "path = " << path << std::endl;};
+    bool preorder(const IR::Type_Name* name) override {std::cout << "name = " << name << std::endl;};
+    bool preorder(const IR::P4Action* action) override {std::cout << "action = " << action << std::endl;};
+};
+
 void CheckDeprecated::warnIfDeprecated(
     const IR::IAnnotated* annotated, const IR::Node* errorNode) {
     if (annotated == nullptr)
@@ -43,7 +56,10 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
     for (int i = 0; i < action->body->components.size(); i++) { 
         std::cout << "Action action->body->components[i]->getNode()->node_type_name() = " << action->body->components[i]->getNode()->node_type_name() << std::endl;
         if (action->body->components[i]->getNode()->node_type_name() == "BlockStatement") {
-            std::cout << "action->body->components[i] = " << action->body->components[i] << std::endl; 
+            std::cout << "action->body->components[i] = " << action->body->components[i] << std::endl;
+            std::cout << "Start processing " << std::endl;
+            CheckGetMember chgm(this->refMap); 
+            action->body->components[i]->getNode()->apply(chgm);
             std::cout << std::endl;
         }
     }
