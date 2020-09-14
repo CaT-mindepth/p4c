@@ -19,7 +19,7 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
         std::cout << "control->body->components[i] = " << control->body->components[i] << std::endl;
         std::cout << "control->body->components[i]->getNode()->node_type_name() = " << control->body->components[i]->getNode()->node_type_name() << std::endl;
         if (auto switch_ptr = control->body->components[i]->to<IR::SwitchStatement>()) {
-           std::cout << "exiiiiiiiiiiiiiiiiiiiiiiii" << std::endl;
+           std::cout << "==================Output more about the block info==================" << std::endl;
            std::cout << "switch_ptr->expression->expression = " << switch_ptr->expression << std::endl;
            for (int j = 0; j < switch_ptr->cases.size(); j++) {
                std::cout << "switch_ptr->cases[j]->label = " << switch_ptr->cases[j]->label << std::endl;
