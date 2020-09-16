@@ -24,10 +24,11 @@ class CheckGetMember : public Inspector {
 public:
     explicit CheckGetMember(const ReferenceMap* refMap): refMap(refMap)
     { CHECK_NULL(refMap); setName("CheckGetMember"); }
+    std::string output_str = "";
 
 //    void warnIfGetMember(const IR::IAnnotated* declaration, const IR::Node* errorNode) {};
-
-    bool preorder(const IR::PathExpression* path) override {std::cout << "PathExpression* path = " << path << std::endl; return true;};
+     
+    bool preorder(const IR::PathExpression* path) override {std::cout << "PathExpression* path->path->name = " << path->path->name << std::endl; return true;};
     bool preorder(const IR::Type_Name* name) override {std::cout << "Type_Name* name = " << name << std::endl; return true; };
     bool preorder(const IR::P4Action* action) override {std::cout << "P4Action action = " << action << std::endl; return true;};
     bool preorder(const IR::Expression* expression) override {std::cout << "Expression* expression = " << expression << std::endl; return true;};
@@ -64,10 +65,51 @@ public:
         std::cout << "MethodCallStatement *mcs->methodCall = " << mcs->methodCall << std::endl; return true;
     };
     bool preorder(const IR::IfStatement *ifs) override {std::cout << "IfStatement *if = " << ifs << std::endl; return true;};
+    bool preorder(const IR::Operation_Binary *expr) override {std::cout << "Operation_Binary *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Operation_Ternary *expr) override {std::cout << "Operation_Ternary *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Neg *expr) override {std::cout << "Neg *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Cmpl *expr) override {std::cout << "Cmpl *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::LNot *expr) override {std::cout << "LNot *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Mul *expr) override {std::cout << "Mul *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Div *expr) override {std::cout << "Div *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Mod *expr) override {std::cout << "Mod *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Add *expr) override {std::cout << "Add *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::AddSat *expr) override {std::cout << "AddSat *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Sub *expr) override {std::cout << "Sub *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::SubSat *expr) override {std::cout << "SubSat *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Shl *expr) override {std::cout << "Shl *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Shr *expr) override {std::cout << "Shr *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Equ *expr) override {std::cout << "Equ *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Neq *expr) override {std::cout << "Neq *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Lss *expr) override {std::cout << "Lss *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Leq *expr) override {std::cout << "Leq *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Grt *expr) override {std::cout << "Grt *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Geq *expr) override {std::cout << "Geq *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::BAnd *expr) override {std::cout << "BAnd *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::BOr *expr) override {std::cout << "BOr *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::BXor *expr) override {std::cout << "BXor *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::LAnd *expr) override {std::cout << "LAnd *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::LOr *expr) override {std::cout << "LOr *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Concat *expr) override {std::cout << "Concat *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Mask *expr) override {std::cout << "Mask *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Range *expr) override {std::cout << "Range *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::ArrayIndex *expr) override {std::cout << "ArrayIndex *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Slice *expr) override {std::cout << "Slice *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Mux *expr) override {std::cout << "Mux *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Cast *expr) override {std::cout << "Cast *expr = " << expr << std::endl; return true;};
+    bool preorder(const IR::Member *m) override {std::cout << "Member *m = " << m << std::endl; return true;};
+    
     bool preorder(const IR::TypeNameExpression *t) override {std::cout << "TypeNameExpression *t = " << t << std::endl; return true;};
     bool preorder(const IR::ConstructorCallExpression *cce) override {std::cout << "ConstructorCallExpression *cce = " << cce << std::endl; return true;};
     bool preorder(const IR::NamedExpression *ne) override {std::cout << "NamedExpression *ne = " << ne << std::endl; return true;};
     bool preorder(const IR::DefaultExpression *dftexpr) override {std::cout << "DefaultExpression *dftexpr = " << dftexpr << std::endl; return true;};
+    bool preorder(const IR::Constant *c) override {std::cout << "Constant *c = " << c << std::endl; output_str += c->toString() + "\n"; return true;};
+    bool preorder(const IR::BoolLiteral *bl) override {std::cout << "BoolLiteral *bl = " << bl << std::endl; return true;};
+    bool preorder(const IR::StringLiteral *str) override {std::cout << "StringLiteral *str = " << str << std::endl; return true;};
+    bool preorder(const IR::Parameter *p) override {std::cout << "Parameter *p = " << p << std::endl; return true;};
+    bool preorder(const IR::ParameterList *p) override {std::cout << "ParameterList *p = " << p << std::endl; return true;};
+    bool preorder(const IR::TypeParameters *tp) override {std::cout << "TypeParameters *tp = " << tp << std::endl; return true;};
+    bool preorder(const IR::Argument *arg) override {std::cout << "Argument *arg = " << arg << std::endl; return true;};
     bool preorder(const IR::Declaration_Instance *di) override {std::cout << "Declaration_Instance *d = " << di << std::endl; return true;};
     
 };
