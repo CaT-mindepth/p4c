@@ -27,7 +27,7 @@ public:
     std::string output_str = "";
 
 //    void warnIfGetMember(const IR::IAnnotated* declaration, const IR::Node* errorNode) {};
-     
+
     bool preorder(const IR::PathExpression* path) override {std::cout << "PathExpression* path->path->name = " << path->path->name << std::endl; return true;};
     bool preorder(const IR::Type_Name* name) override {std::cout << "Type_Name* name = " << name << std::endl; return true; };
     bool preorder(const IR::P4Action* action) override {std::cout << "P4Action action = " << action << std::endl; return true;};
@@ -103,7 +103,7 @@ public:
     bool preorder(const IR::ConstructorCallExpression *cce) override {std::cout << "ConstructorCallExpression *cce = " << cce << std::endl; return true;};
     bool preorder(const IR::NamedExpression *ne) override {std::cout << "NamedExpression *ne = " << ne << std::endl; return true;};
     bool preorder(const IR::DefaultExpression *dftexpr) override {std::cout << "DefaultExpression *dftexpr = " << dftexpr << std::endl; return true;};
-    bool preorder(const IR::Constant *c) override {std::cout << "Constant *c = " << c << std::endl; output_str += c->toString() + "\n"; return true;};
+    bool preorder(const IR::Constant *c) override { std::cout << "Constant *c = " << c << std::endl; return true;};
     bool preorder(const IR::BoolLiteral *bl) override {std::cout << "BoolLiteral *bl = " << bl << std::endl; return true;};
     bool preorder(const IR::StringLiteral *str) override {std::cout << "StringLiteral *str = " << str << std::endl; return true;};
     bool preorder(const IR::Parameter *p) override {std::cout << "Parameter *p = " << p << std::endl; return true;};
@@ -141,8 +141,11 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
             std::cout << "action->body->components[i] = " << action->body->components[i] << std::endl;
             std::cout << "Start processing " << std::endl;
             CheckGetMember chgm(this->refMap); 
-            action->body->components[i]->getNode()->apply(chgm);
-            std::cout << std::endl;
+            IR::Node *copy_node = action->body->components[i]->getNode()->clone();
+            copy_node->apply(chgm);
+            std::cout << "=========================" << std::endl;
+            std::cout << "copy_node = " << copy_node << std::endl;
+            std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
         }
     }
     return true;
