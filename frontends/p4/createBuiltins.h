@@ -27,6 +27,8 @@ limitations under the License.
  */
 namespace P4 {
 class CreateBuiltins final : public Modifier {
+    bool output_header_struct = 0;
+    bool output_table = 0;
     bool addNoAction;
  public:
     using Modifier::postorder;

@@ -35,6 +35,7 @@ control c() { apply {} }
 control d() { @name("c") c() c_inst; { c_inst.apply(); }}
 */
 class DoInstantiateCalls : public Transform {
+    bool output_control = 0;
     ReferenceMap* refMap;
 
     IR::IndexedVector<IR::Declaration> insert;

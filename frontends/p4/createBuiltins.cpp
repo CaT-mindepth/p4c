@@ -21,8 +21,12 @@ limitations under the License.
 namespace P4 {
 
 void CreateBuiltins::postorder(IR::Type_Header* type_header) {
+    if (output_header_struct == 0) {
+        output_header_struct = 1;
+        std::cout << "=====================Struct and Header Info========================" << std::endl;
+    }
     std::cout << "Header name is " << type_header->getName() << std::endl;
-    std::cout << "type_header->width_bits() = " << type_header->width_bits() << std::endl;
+    std::cout << "Header size is " << type_header->width_bits() << std::endl;
     for (int i = 0; i < type_header->fields.size(); i++) {
         std::cout << type_header->fields[i] << std::endl;
     }
@@ -30,6 +34,10 @@ void CreateBuiltins::postorder(IR::Type_Header* type_header) {
 }
 
 void CreateBuiltins::postorder(IR::Type_Struct* type_struct) {
+    if (output_header_struct == 0) {
+        output_header_struct = 1;
+        std::cout << "=====================Struct and Header Info========================" << std::endl;
+    }
     std::cout << "Struct name is " << type_struct->getName() << std::endl;
     for (int i = 0; i < type_struct->fields.size(); i++) {
         std::cout << type_struct->fields[i] << std::endl;
@@ -38,7 +46,6 @@ void CreateBuiltins::postorder(IR::Type_Struct* type_struct) {
 }
 
 void CreateBuiltins::postorder(IR::P4Parser* parser) {
-    std::cout << "=====================Table Info========================" << std::endl;
     parser->states.push_back(new IR::ParserState(IR::ParserState::accept, nullptr));
     parser->states.push_back(new IR::ParserState(IR::ParserState::reject, nullptr));
 }
@@ -102,6 +109,10 @@ void CreateBuiltins::postorder(IR::ActionList* actions) {
 }
 
 bool CreateBuiltins::preorder(IR::P4Table* table) {
+    if (output_table == 0) {
+        output_table = 1;
+        std::cout << "=====================Table Info========================" << std::endl;
+    }
     std::cout << "table name is " << table->getName() << std::endl;
     if (table->getKey()->keyElements.size() != 0) {
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {

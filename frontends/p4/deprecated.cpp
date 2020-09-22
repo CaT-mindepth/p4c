@@ -382,11 +382,15 @@ void CheckDeprecated::warnIfDeprecated(
 }
 
 bool CheckDeprecated::preorder(const IR::P4Action* action) {
+    if (output_action == 0) {
+        output_action = 1;
+        std::cout << "=====================Action Info========================" << std::endl;
+    }
     std::cout << "Action name = " << action->getName() << std::endl;
     std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
         if (action->body->components[i]->getNode()->node_type_name() == "BlockStatement") {
-            std::cout << "Start processing " << std::endl;
+            std::cout << std::endl;
             CheckGetMember chgm(this->refMap); 
             IR::Node *copy_node = action->body->components[i]->getNode()->clone();
             auto mid_node = copy_node->apply(chgm);
@@ -394,7 +398,7 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
             auto fin_node = mid_node->apply(fcf);
             // std::cout << "=========================" << std::endl;
             // std::cout << "mid_node = " << mid_node << std::endl;
-            std::cout << "fin_node = " << fin_node << std::endl;
+            std::cout << "Parsed action body = " << fin_node << std::endl;
             // std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
         }
     }

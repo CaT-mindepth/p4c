@@ -27,6 +27,7 @@ namespace P4 {
  * gives warnings.
  */
 class CheckDeprecated : public Inspector {
+    bool output_action = 0;
     const ReferenceMap* refMap;
  public:
     explicit CheckDeprecated(const ReferenceMap* refMap): refMap(refMap)
