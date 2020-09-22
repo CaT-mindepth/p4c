@@ -27,20 +27,34 @@ void CreateBuiltins::postorder(IR::Type_Header* type_header) {
     }
     std::cout << "Header name is " << type_header->getName() << std::endl;
     std::cout << "Header size is " << type_header->width_bits() << std::endl;
+    header_size_map[type_header->getName()] = type_header->width_bits(); 
     for (int i = 0; i < type_header->fields.size(); i++) {
-        std::cout << type_header->fields[i] << std::endl;
+        std::cout << "member variable name: " << type_header->fields[i]->getName() << ", whose size is: " << type_header->fields[i]->type->to<IR::Type_Bits>()->size << " bits" << std::endl;
     }
     std::cout << std::endl;
 }
 
 void CreateBuiltins::postorder(IR::Type_Struct* type_struct) {
+    // TODO: understand why it automatically create a struct called standard_metadata_t
+    if (type_struct->getName() == cstring("standard_metadata_t")) {
+        return;
+    }
     if (output_header_struct == 0) {
         output_header_struct = 1;
         std::cout << "=====================Struct and Header Info========================" << std::endl;
     }
     std::cout << "Struct name is " << type_struct->getName() << std::endl;
     for (int i = 0; i < type_struct->fields.size(); i++) {
-        std::cout << type_struct->fields[i] << std::endl;
+        std::cout << "member variable name is " << type_struct->fields[i]->getName() << std::endl;
+        std::cout << type_struct->fields[i];
+        if (type_struct->fields[i]->type->getNode()->node_type_name() == "Type_Bits") {
+            std::cout << " whose size is " <<  type_struct->fields[i]->type->to<IR::Type_Bits>()->size << " bits " << std::endl;
+        } else if (type_struct->fields[i]->type->getNode()->node_type_name() == "Type_Name") {
+            std::cout << " whose size is " << header_size_map[type_struct->fields[i]->type->getNode()->toString()] << " bits " << std::endl;
+        } else {
+            // TODO: consider other type of node and how to output their size
+            std::cout << std::endl;
+        }
     }
     std::cout << std::endl;
 }

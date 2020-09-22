@@ -30,6 +30,7 @@ class CreateBuiltins final : public Modifier {
     bool output_header_struct = 0;
     bool output_table = 0;
     bool addNoAction;
+    std::map<cstring, int> header_size_map;
  public:
     using Modifier::postorder;
     CreateBuiltins() { setName("CreateBuiltins"); }
