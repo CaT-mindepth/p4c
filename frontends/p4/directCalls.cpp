@@ -2,6 +2,47 @@
 
 namespace P4 {
 
+const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
+    for (int i = 0; i < type_header->fields.size(); i++) {
+        headerInfo_map[type_header->getName()].header_portion.push_back(type_header->fields[i]->getName());
+    }
+    return type_header;
+}
+
+const IR::Node* DoInstantiateCalls::preorder(IR::Type_Struct* type_struct) {
+    if (type_struct->getName() == cstring("standard_metadata_t")) {
+        return type_struct;
+    }
+    for (int i = 0; i < type_struct->fields.size(); i++) {
+        structInfo_map[type_struct->getName()].struct_portion.push_back(type_struct->fields[i]->getName());
+    }
+    return type_struct;
+}
+
+
+const IR::Node* DoInstantiateCalls::preorder(IR::P4Table* table) {
+    // Add table match into the tableInfo_map
+    if (table->getKey()->keyElements.size() != 0) {
+        for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
+            tableInfo_map[table->getName()].match_portion.push_back(table->getKey()->keyElements[i]->expression->toString());
+        }
+    }
+    if (table->getActionList()->size() != 0) {
+        for (int i = 0; i < table->getActionList()->actionList.size(); i++) {
+            if (table->getActionList()->actionList[i]->toString() != cstring("NoAction")) {
+                tableInfo_map[table->getName()].action_portion.push_back(table->getActionList()->actionList[i]->toString());
+            }
+        }
+    }
+    return table;
+}
+
+
+const IR::Node* DoInstantiateCalls::preorder(IR::P4Action* action) {
+    return action;
+}
+
+
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
     // std::cout << "DoInstantiateCalls::postorder(IR::P4Parser* parser = " << parser << std::endl;
     insert.append(parser->parserLocals);

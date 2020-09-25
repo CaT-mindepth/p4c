@@ -94,7 +94,7 @@ public:
     // const IR::Node* preorder(IR::EmptyStatement *emptystmt) override {std::cout << "EmptyStatement *emptystmt = " << emptystmt << std::endl; return emptystmt;};
     // const IR::Node* preorder(IR::ExitStatement *exitstmt) override {std::cout << "ExitStatement *exitstmt = " << exitstmt << std::endl; return exitstmt;};
     // const IR::Node* preorder(IR::ReturnStatement *r) override {std::cout << "ReturnStatement * = " << r << std::endl; return r;};
-    // const IR::Node* preorder(IR::AssignmentStatement *as) override {std::cout << "AssignmentStatement *as = " << as << std::endl; return as;};
+    const IR::Node* preorder(IR::AssignmentStatement *as) override {std::cout << "AssignmentStatement *as = " << as << std::endl; return as;};
     // const IR::Node* preorder(IR::MethodCallStatement *mcs) override {
     //     std::cout << "MethodCallStatement *mcs = " << mcs << std::endl;
     //     std::cout << "MethodCallStatement *mcs->methodCall = " << mcs->methodCall << std::endl;
@@ -139,7 +139,8 @@ public:
         if (m->member.toString() != cstring("read") and m->member.toString() != cstring("write")) {
             m->expr = new IR::PathExpression(cstring("pkt"));
         }
-        return m;};
+        return m;
+    };
 
     // const IR::Node* preorder(IR::TypeNameExpression *t) override {std::cout << "TypeNameExpression *t = " << t << std::endl; return t;};
     // const IR::Node* preorder(IR::ConstructorCallExpression *cce) override {std::cout << "ConstructorCallExpression *cce = " << cce << std::endl; return cce;};
