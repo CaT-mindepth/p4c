@@ -198,6 +198,7 @@ class Graphs : public Inspector {
     vertex_t exit_v{};
     Parents parents{};
     std::vector<const IR::Statement *> statementsStack{};
+    std::vector<cstring> table_name_vec;
 };
 
 }  // namespace graphs

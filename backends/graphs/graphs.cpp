@@ -26,6 +26,10 @@ limitations under the License.
 namespace graphs {
 
 Graphs::vertex_t Graphs::add_vertex(const cstring &name, VertexType type) {
+    if (name == "__START__") {
+        table_name_vec.clear();
+    }
+    table_name_vec.push_back(name);
     auto v = boost::add_vertex(*g);
     boost::put(&Vertex::name, *g, v, name);
     boost::put(&Vertex::type, *g, v, type);
@@ -33,6 +37,13 @@ Graphs::vertex_t Graphs::add_vertex(const cstring &name, VertexType type) {
 }
 
 void Graphs::add_edge(const vertex_t &from, const vertex_t &to, const cstring &name) {
+    if (table_name_vec[int(from)] != "__START__" and table_name_vec[int(to)] != "__EXIT__") {
+        if (name == "") {
+            std::cout << "Table " << table_name_vec[int(from)] << " is implemented before Table " << table_name_vec[int(to)] << std::endl;
+        } else {
+            std::cout << "Table " << table_name_vec[int(from)] << "'s match result will decide whether to implement Table " << table_name_vec[int(to)] << " or not" << std::endl;
+        }
+    }
     auto ep = boost::add_edge(from, to, g->root());
     boost::put(boost::edge_name, g->root(), ep.first, name);
 }

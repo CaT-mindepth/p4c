@@ -77,6 +77,7 @@ public:
         cstring key_str;
         if (value_str.find("read") != nullptr) {
            key_str = mce->arguments[0][0]->toString();
+           // return new IR::AssignmentStatement(new IR::PathExpression(value_str), new IR::PathExpression(key_str));
         } else {
            assert(value_str.find("write") != nullptr);
            key_str = mce->arguments[0][1]->toString();
@@ -94,7 +95,7 @@ public:
     // const IR::Node* preorder(IR::EmptyStatement *emptystmt) override {std::cout << "EmptyStatement *emptystmt = " << emptystmt << std::endl; return emptystmt;};
     // const IR::Node* preorder(IR::ExitStatement *exitstmt) override {std::cout << "ExitStatement *exitstmt = " << exitstmt << std::endl; return exitstmt;};
     // const IR::Node* preorder(IR::ReturnStatement *r) override {std::cout << "ReturnStatement * = " << r << std::endl; return r;};
-    const IR::Node* preorder(IR::AssignmentStatement *as) override {std::cout << "AssignmentStatement *as = " << as << std::endl; return as;};
+    // const IR::Node* preorder(IR::AssignmentStatement *as) override {std::cout << "AssignmentStatement *as = " << as << std::endl; return as;};
     // const IR::Node* preorder(IR::MethodCallStatement *mcs) override {
     //     std::cout << "MethodCallStatement *mcs = " << mcs << std::endl;
     //     std::cout << "MethodCallStatement *mcs->methodCall = " << mcs->methodCall << std::endl;

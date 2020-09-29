@@ -92,6 +92,7 @@ bool ControlGraphs::preorder(const IR::PackageBlock *block) {
         if (!it.second) continue;
         if (it.second->is<IR::ControlBlock>()) {
             auto name = it.second->to<IR::ControlBlock>()->container->name;
+            std::cout << "Control block name is " << name << std::endl;
             LOG1("Generating graph for top-level control " << name);
             Graph g_;
             g = &g_;
