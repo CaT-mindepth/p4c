@@ -2,6 +2,75 @@
 
 namespace P4 {
 
+class GetPktMember : public Transform {
+    public:
+        std::vector<cstring> pkt_vec;
+        bool not_in_vec(cstring s) {
+            for (int i = 0; i < pkt_vec.size(); i++) {
+                if (pkt_vec[i] == s) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        void print_vec() {
+            std::cout << "fields modified within an Action:";
+            for (int i = 0; i < pkt_vec.size(); i++) {
+                std::cout << pkt_vec[i] << ";";
+            }
+            std::cout << std::endl;
+        }
+        bool exist_dot(cstring s) {
+            for (int i = 0; i < s.size(); i++) {
+                if (s[i] == '.') {
+                    return true;
+                }
+            }
+            return false;
+        }
+        // We only record which pkt field is used in this particular action
+        const IR::Node* preorder(IR::AssignmentStatement *as) override {if (exist_dot(as->left->toString()) and not_in_vec(as->left->toString())) { pkt_vec.push_back(as->left->toString());}
+                                                                        if (exist_dot(as->right->toString()) and not_in_vec(as->right->toString())) { pkt_vec.push_back(as->right->toString());}
+                                                                        return as;}
+        const IR::Node* preorder(IR::Operation_Binary *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString())) { pkt_vec.push_back(expr->left->toString());}
+                                                                        if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString())) { pkt_vec.push_back(expr->right->toString());}
+                                                                       return expr;};
+        const IR::Node* preorder(IR::Neg *expr) override {return expr;};
+        const IR::Node* preorder(IR::Cmpl *expr) override {return expr;};
+        const IR::Node* preorder(IR::LNot *expr) override {std::cout << "LNot *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Mul *expr) override {std::cout << "Mul *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Div *expr) override {std::cout << "Div *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Mod *expr) override {std::cout << "Mod *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Add *expr) override {std::cout << "Add expr->left = " << expr->left << std::endl; 
+                                                          std::cout << "expr->right = " << expr->right << std::endl;
+                                                          return expr;};
+        const IR::Node* preorder(IR::AddSat *expr) override {std::cout << "AddSat *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Sub *expr) override {std::cout << "Sub *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::SubSat *expr) override {std::cout << "SubSat *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Shl *expr) override {std::cout << "Shl *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Shr *expr) override {std::cout << "Shr *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Equ *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString())) { pkt_vec.push_back(expr->left->toString());}
+                                                          if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString())) { pkt_vec.push_back(expr->right->toString());}
+                                                          return expr;};
+        const IR::Node* preorder(IR::Neq *expr) override {std::cout << "Neq *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Lss *expr) override {std::cout << "Lss *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Leq *expr) override {std::cout << "Leq *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Grt *expr) override {std::cout << "Grt *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Geq *expr) override {std::cout << "Geq *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::BAnd *expr) override {std::cout << "BAnd *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::BOr *expr) override {std::cout << "BOr *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::BXor *expr) override {std::cout << "BXor *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::LAnd *expr) override {std::cout << "LAnd *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::LOr *expr) override {std::cout << "LOr *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Concat *expr) override {std::cout << "Concat *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Mask *expr) override {std::cout << "Mask *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Range *expr) override {std::cout << "Range *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::ArrayIndex *expr) override {std::cout << "ArrayIndex *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Slice *expr) override {std::cout << "Slice *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Mux *expr) override {std::cout << "Mux *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Cast *expr) override {std::cout << "Cast *expr = " << expr << std::endl; return expr;};
+};
+
 const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
     std::cout << "++++++ Header name = " << type_header->getName() << std::endl;
     std::cout << "Header members:";
@@ -51,18 +120,17 @@ const IR::Node* DoInstantiateCalls::preorder(IR::P4Table* table) {
 
 
 const IR::Node* DoInstantiateCalls::preorder(IR::P4Action* action) {
-    std::vector<cstring> para_vec;
-    std::vector<cstring> body_vec;
-    for (int i = 0; i < action->parameters->size(); i++) {
-        std::cout << action->parameters[i].toString() << std::endl;
-        para_vec.push_back(action->parameters[i].toString());
-    }
-    std::cout << "Action body = " << action->body << std::endl;
+   if (action->getName() == "NoAction") {
+       return action;
+   }
+   std::cout << "------------Action name = " << action->getName() << std::endl;
+    GetPktMember gpm;
     for (int i = 0; i < action->body->components.size(); i++) {
-         std::cout << "action->body->components[i]->getNode()->node_type_name()" << action->body->components[i]->getNode()->node_type_name() << std::endl;
          std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
+         IR::Node *copy_node = action->body->components[i]->getNode()->clone();
+         auto fin_node = copy_node->apply(gpm);
     }
-    // TODO: add vars inside one action into vector
+    gpm.print_vec();
     return action;
 }
 
