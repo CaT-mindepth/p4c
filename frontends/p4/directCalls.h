@@ -35,42 +35,47 @@ control c() { apply {} }
 control d() { @name("c") c() c_inst; { c_inst.apply(); }}
 */
 
-class TableInfo {
-public:
-    std::vector<cstring> match_portion;
-    std::vector<cstring> action_portion;
-};
-
-class ActionInfo {
-public:
-    std::vector<cstring> para_portion;
-};
-
-class HeaderInfo {
-public:
-    std::vector<cstring> header_portion;
-};
-
-class StructInfo {
-public:
-    std::vector<cstring> struct_portion;
-};
+// class TableInfo {
+// public:
+//     std::vector<cstring> match_portion;
+//     std::vector<cstring> action_portion;
+// };
+// 
+// class ActionInfo {
+// public:
+//     std::vector<cstring> para_portion;
+// };
+// 
+// class HeaderInfo {
+// public:
+//     std::vector<cstring> header_portion;
+// };
+// 
+// class StructInfo {
+// public:
+//     std::vector<cstring> struct_portion;
+// };
 
 class DoInstantiateCalls : public Transform {
     bool output_control = 0;
     ReferenceMap* refMap;
 
     IR::IndexedVector<IR::Declaration> insert;
-    std::map<cstring, StructInfo> structInfo_map;
-    std::map<cstring, HeaderInfo> headerInfo_map;
-    std::map<cstring, TableInfo> tableInfo_map;
-    std::map<cstring, ActionInfo> actionInfo_map;
+    // std::map<cstring, StructInfo> structInfo_map;
+    // std::map<cstring, HeaderInfo> headerInfo_map;
+    // std::map<cstring, TableInfo> tableInfo_map;
+    // std::map<cstring, ActionInfo> actionInfo_map;
 
  public:
     explicit DoInstantiateCalls(ReferenceMap* refMap) : refMap(refMap) {
         CHECK_NULL(refMap);
         setName("DoInstantiateCalls");
     }
+    // void print_tableInfo_map();
+    // void print_headerInfo_map();
+    // void print_structInfo_map();
+    // void print_actionInfo_map();
+
     const IR::Node* postorder(IR::P4Parser* parser) override;
     const IR::Node* postorder(IR::P4Control* control) override;
     const IR::Node* postorder(IR::MethodCallExpression* expression) override;

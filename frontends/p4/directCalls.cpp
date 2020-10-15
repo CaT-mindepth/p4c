@@ -3,9 +3,12 @@
 namespace P4 {
 
 const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
+    std::cout << "++++++ Header name = " << type_header->getName() << std::endl;
+    std::cout << "Header members:";
     for (int i = 0; i < type_header->fields.size(); i++) {
-        headerInfo_map[type_header->getName()].header_portion.push_back(type_header->fields[i]->getName());
+        std::cout << type_header->fields[i]->getName() << ";";
     }
+    std::cout << std::endl;
     return type_header;
 }
 
@@ -13,35 +16,78 @@ const IR::Node* DoInstantiateCalls::preorder(IR::Type_Struct* type_struct) {
     if (type_struct->getName() == cstring("standard_metadata_t")) {
         return type_struct;
     }
+    std::cout << "++++++ Struct name = " << type_struct->getName() << std::endl;
+    std::cout << "Struct members:";
     for (int i = 0; i < type_struct->fields.size(); i++) {
-        structInfo_map[type_struct->getName()].struct_portion.push_back(type_struct->fields[i]->getName());
+        std::cout << type_struct->fields[i]->getName() << ";";
     }
+    std::cout << std::endl;
     return type_struct;
 }
 
 
 const IR::Node* DoInstantiateCalls::preorder(IR::P4Table* table) {
     // Add table match into the tableInfo_map
+    std::cout << "+++++++++++++++Table name = " << table->getName() << std::endl;
+    std::cout << "Match portion:";
     if (table->getKey()->keyElements.size() != 0) {
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
-            tableInfo_map[table->getName()].match_portion.push_back(table->getKey()->keyElements[i]->expression->toString());
+            std::cout << table->getKey()->keyElements[i]->expression;
         }
     }
+    std::cout << std::endl;
+    std::cout << "Action portion:";
     if (table->getActionList()->size() != 0) {
         for (int i = 0; i < table->getActionList()->actionList.size(); i++) {
             if (table->getActionList()->actionList[i]->toString() != cstring("NoAction")) {
-                tableInfo_map[table->getName()].action_portion.push_back(table->getActionList()->actionList[i]->toString());
+                std::cout << table->getActionList()->actionList[i]->toString() << ";";
             }
         }
     }
+    std::cout << std::endl;
+
     return table;
 }
 
 
 const IR::Node* DoInstantiateCalls::preorder(IR::P4Action* action) {
+    std::vector<cstring> para_vec;
+    std::vector<cstring> body_vec;
+    for (int i = 0; i < action->parameters->size(); i++) {
+        std::cout << action->parameters[i].toString() << std::endl;
+        para_vec.push_back(action->parameters[i].toString());
+    }
+    std::cout << "Action body = " << action->body << std::endl;
+    for (int i = 0; i < action->body->components.size(); i++) {
+         std::cout << "action->body->components[i]->getNode()->node_type_name()" << action->body->components[i]->getNode()->node_type_name() << std::endl;
+         std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
+    }
+    // TODO: add vars inside one action into vector
     return action;
 }
 
+// void DoInstantiateCalls::print_tableInfo_map() {
+//     for(std::map<cstring, TableInfo>::iterator it = tableInfo_map.begin(); it != tableInfo_map.end(); it++) {
+//         std::cout << "+++++++++++++++Table name = " << it->first << std::endl;
+//         for (int i = 0; i < it->second.match_portion.size(); i++) {
+//             std::cout << it->second.match_portion[i] << " ";
+//         }
+//         std::cout << std::endl;
+//         for (int i = 0; i < it->second.action_portion.size(); i++) {
+//             std::cout << it->second.action_portion[i] << " ";
+//         }
+//         std::cout << std::endl;
+//     }
+// }
+// 
+// void DoInstantiateCalls::print_headerInfo_map() {
+// }
+// 
+// void DoInstantiateCalls::print_structInfo_map() {
+// }
+// 
+// void DoInstantiateCalls::print_actionInfo_map() {
+// }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
     // std::cout << "DoInstantiateCalls::postorder(IR::P4Parser* parser = " << parser << std::endl;
