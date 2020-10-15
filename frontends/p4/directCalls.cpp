@@ -1,4 +1,5 @@
 #include "directCalls.h"
+#include <fstream>
 
 namespace P4 {
 
@@ -14,11 +15,14 @@ class GetPktMember : public Transform {
             return true;
         }
         void print_vec() {
-            std::cout << "fields modified within an Action:";
+            std::ofstream file_to_print;
+            file_to_print.open("/tmp/example.txt", std::ofstream::app);
+            file_to_print << "fields modified within an Action:";
             for (int i = 0; i < pkt_vec.size(); i++) {
-                std::cout << pkt_vec[i] << ";";
+                file_to_print << pkt_vec[i] << ";";
             }
-            std::cout << std::endl;
+            file_to_print << "\n---------\n";
+            file_to_print.close();
         }
         bool exist_dot(cstring s) {
             for (int i = 0; i < s.size(); i++) {
@@ -72,12 +76,20 @@ class GetPktMember : public Transform {
 };
 
 const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
-    std::cout << "++++++ Header name = " << type_header->getName() << std::endl;
-    std::cout << "Header members:";
-    for (int i = 0; i < type_header->fields.size(); i++) {
-        std::cout << type_header->fields[i]->getName() << ";";
+    std::ofstream file_to_print;
+    if (!output_file) {
+        output_file = 1;
+        file_to_print.open("/tmp/example.txt");
+    } else {
+        file_to_print.open("/tmp/example.txt", std::ofstream::app);
     }
-    std::cout << std::endl;
+    file_to_print << "Header name = " << type_header->getName() << std::endl;
+    file_to_print << "Header members:";
+    for (int i = 0; i < type_header->fields.size(); i++) {
+        file_to_print << type_header->fields[i]->getName() << ";";
+    }
+    file_to_print << "\n---------\n";
+    file_to_print.close();
     return type_header;
 }
 
@@ -85,36 +97,51 @@ const IR::Node* DoInstantiateCalls::preorder(IR::Type_Struct* type_struct) {
     if (type_struct->getName() == cstring("standard_metadata_t")) {
         return type_struct;
     }
-    std::cout << "++++++ Struct name = " << type_struct->getName() << std::endl;
-    std::cout << "Struct members:";
-    for (int i = 0; i < type_struct->fields.size(); i++) {
-        std::cout << type_struct->fields[i]->getName() << ";";
+    std::ofstream file_to_print;
+    if (!output_file) {
+        output_file = 1;
+        file_to_print.open("/tmp/example.txt");
+    } else {
+        file_to_print.open("/tmp/example.txt", std::ofstream::app);
     }
-    std::cout << std::endl;
+    file_to_print << "Struct name = " << type_struct->getName() << std::endl;
+    file_to_print << "Struct members:";
+    for (int i = 0; i < type_struct->fields.size(); i++) {
+        file_to_print << type_struct->fields[i]->getName() << ";";
+    }
+    file_to_print << "\n---------\n";
+    file_to_print.close();
     return type_struct;
 }
 
 
 const IR::Node* DoInstantiateCalls::preorder(IR::P4Table* table) {
     // Add table match into the tableInfo_map
-    std::cout << "+++++++++++++++Table name = " << table->getName() << std::endl;
-    std::cout << "Match portion:";
+    std::ofstream file_to_print;
+    if (!output_file) {
+        file_to_print.open("/tmp/example.txt");
+        output_file = 1;
+    } else {
+        file_to_print.open("/tmp/example.txt", std::ofstream::app);
+    }
+    file_to_print << "Table name = " << table->getName() << std::endl;
+    file_to_print << "Match portion:";
     if (table->getKey()->keyElements.size() != 0) {
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
-            std::cout << table->getKey()->keyElements[i]->expression;
+            file_to_print << table->getKey()->keyElements[i]->expression;
         }
     }
-    std::cout << std::endl;
-    std::cout << "Action portion:";
+    file_to_print << std::endl;
+    file_to_print << "Action portion:";
     if (table->getActionList()->size() != 0) {
         for (int i = 0; i < table->getActionList()->actionList.size(); i++) {
             if (table->getActionList()->actionList[i]->toString() != cstring("NoAction")) {
-                std::cout << table->getActionList()->actionList[i]->toString() << ";";
+                file_to_print << table->getActionList()->actionList[i]->toString() << ";";
             }
         }
     }
-    std::cout << std::endl;
-
+    file_to_print << "\n---------" << std::endl;
+    file_to_print.close();
     return table;
 }
 
@@ -123,39 +150,17 @@ const IR::Node* DoInstantiateCalls::preorder(IR::P4Action* action) {
    if (action->getName() == "NoAction") {
        return action;
    }
-   std::cout << "------------Action name = " << action->getName() << std::endl;
-    GetPktMember gpm;
-    for (int i = 0; i < action->body->components.size(); i++) {
-         std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
-         IR::Node *copy_node = action->body->components[i]->getNode()->clone();
-         auto fin_node = copy_node->apply(gpm);
-    }
-    gpm.print_vec();
-    return action;
+   std::ofstream file_to_print;
+   file_to_print.open("/tmp/example.txt", std::ofstream::app);
+   file_to_print << "Action name = " << action->getName() << std::endl;
+   GetPktMember gpm;
+   for (int i = 0; i < action->body->components.size(); i++) {
+       IR::Node *copy_node = action->body->components[i]->getNode()->clone();
+       auto fin_node = copy_node->apply(gpm);
+   }
+   gpm.print_vec();
+   return action;
 }
-
-// void DoInstantiateCalls::print_tableInfo_map() {
-//     for(std::map<cstring, TableInfo>::iterator it = tableInfo_map.begin(); it != tableInfo_map.end(); it++) {
-//         std::cout << "+++++++++++++++Table name = " << it->first << std::endl;
-//         for (int i = 0; i < it->second.match_portion.size(); i++) {
-//             std::cout << it->second.match_portion[i] << " ";
-//         }
-//         std::cout << std::endl;
-//         for (int i = 0; i < it->second.action_portion.size(); i++) {
-//             std::cout << it->second.action_portion[i] << " ";
-//         }
-//         std::cout << std::endl;
-//     }
-// }
-// 
-// void DoInstantiateCalls::print_headerInfo_map() {
-// }
-// 
-// void DoInstantiateCalls::print_structInfo_map() {
-// }
-// 
-// void DoInstantiateCalls::print_actionInfo_map() {
-// }
 
 const IR::Node* DoInstantiateCalls::postorder(IR::P4Parser* parser) {
     // std::cout << "DoInstantiateCalls::postorder(IR::P4Parser* parser = " << parser << std::endl;
