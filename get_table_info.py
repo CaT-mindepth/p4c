@@ -1,3 +1,5 @@
+import re
+
 f =  open("/tmp/example.txt", "r")
 # key is table name and value is a list of list including 
 # action list; match portion
@@ -107,3 +109,24 @@ print("TabelDict", TabelDict)
 print("HeaderDict", HeaderDict)
 print("StructDict", StructDict)
 print("ActionDict", ActionDict)
+
+
+f = open("/tmp/table_dep.txt", "r")
+for x in f:
+    if x.find("implemented before") != -1:
+        # print("table_name",table_name.group(1,2,3,4))  output table_name ('ingress', 'smac_vlan', 'ingress', 'dmac_vlan')
+        table_name = re.match("Table (\w+).(\w+) is implemented before Table (\w+).(\w+)\n",x)
+        tableA = table_name.group(2)
+        tableB = table_name.group(4)
+        print("tableA = ", tableA)
+        print("tableB = ", tableB)
+        # TODO: figure out the dependency between tableA and tableB
+    else:
+        assert x.find("Match result") != -1
+        table_name = re.search("Match result of Table (\w+).(\w+) will decide whether to implement Table (\w+).(\w+) or not\n", x)
+        # print("2 table_name", table_name.group(1,2,3,4))
+        tableA = table_name.group(2)
+        tableB = table_name.group(4)
+        print("tableA = ", tableA)
+        print("tableB = ", tableB)
+        # TODO: figure out the dependency between tableA and tableB

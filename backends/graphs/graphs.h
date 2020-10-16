@@ -95,6 +95,7 @@ class EdgeSwitch : public EdgeTypeIface {
 
 class Graphs : public Inspector {
  public:
+    bool use_file = false;
     enum class VertexType {
         TABLE,
         CONDITION,
