@@ -1,5 +1,10 @@
 import re
 
+TableDict = {}
+HeaderDict = {}
+StructDict = {}
+ActionDict = {}
+
 f =  open("/tmp/example.txt", "r")
 # key is table name and value is a list of list including 
 # action list; match portion
@@ -10,10 +15,42 @@ f =  open("/tmp/example.txt", "r")
 #Struct name = headers
 #Struct members:
 
-TabelDict = {} 
-HeaderDict = {}
-StructDict = {}
-ActionDict = {}
+# Successor dependency:Table A’s match result determines whether Table B should be executed or not
+
+# whether there is common member in both list1 and list2
+def overlap(list1, list2):
+    for x in list1:
+        if x in list2:
+            return True
+    return False
+
+# output one of the previous four dependencies
+def output_relationship(tableA, tableB, TableDict, ActionDict):
+    # Match dependencies
+    modify_fields_tableA = []
+    modify_fields_tableB = []
+    for i in range(len(TableDict[tableA][1])):
+        action_name = TableDict[tableA][1][i]
+        for j in range(ActionDict[action_name]):
+            modify_fields_tableA.append(ActionDict[action_name][j])
+
+    for i in range(len(TableDict[tableB][1])):
+        action_name = TableDict[tableB][1][i]
+        for j in range(len(ActionDict[action_name])):
+            modify_fields_tableB.append(ActionDict[action_name][j])
+    match_fields_tableA = TableDict[tableA][0]
+    match_fields_tableB = TableDict[tableB][0]
+    # Match dependency: Table A modifies a field Table B matches
+    if overlap(modify_fields_tableA, match_fields_tableB):
+        print(tableA, "has Match dependency relationship with", tableB)
+    # Action dependency: Table A and B both change the same field, but the end-result should be that of the later Table B
+    elif overlap(modify_fields_tableA, modify_fields_tableB):
+        print(tableA, "has Action dependency relationship with", tableB)
+    # Reverse dependency: Table A matches on a field that Table B modifies,
+    elif overlap(match_fields_tableA, modify_fields_tableB):
+        print(tableA, "has Reverse dependency relationship with", tableB)
+    else:
+        print(tableA, "has no dependency relationship with", tableB)
 
 line_list = []
 
@@ -85,7 +122,7 @@ for i in range(len(line_list)):
          action_member = []
          #print("action_member is empty")
 
-     TabelDict[table_name] = [match_member, action_member]
+     TableDict[table_name] = [match_member, action_member]
   elif x.find("Action name =") != -1: 
      # Action name = set_egress_port
      # fields modified within an Action:standard_metadata.egress_spec;
@@ -105,7 +142,7 @@ for i in range(len(line_list)):
      i = i + 1
      ActionDict[action_name] = fields_list
 
-print("TabelDict", TabelDict)
+print("TableDict", TableDict)
 print("HeaderDict", HeaderDict)
 print("StructDict", StructDict)
 print("ActionDict", ActionDict)
@@ -121,12 +158,11 @@ for x in f:
         print("tableA = ", tableA)
         print("tableB = ", tableB)
         # TODO: figure out the dependency between tableA and tableB
+        output_relationship(tableA, tableB, TableDict, ActionDict)
     else:
         assert x.find("Match result") != -1
         table_name = re.search("Match result of Table (\w+).(\w+) will decide whether to implement Table (\w+).(\w+) or not\n", x)
         # print("2 table_name", table_name.group(1,2,3,4))
         tableA = table_name.group(2)
         tableB = table_name.group(4)
-        print("tableA = ", tableA)
-        print("tableB = ", tableB)
-        # TODO: figure out the dependency between tableA and tableB
+        print(tableA, "has successor dependency relationship with", tableB)
