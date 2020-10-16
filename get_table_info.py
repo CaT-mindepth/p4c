@@ -26,32 +26,32 @@ for i in range(len(line_list)):
      if x[len(x) - 1] == '\n':
          x = x[:len(x) - 2]
      header_name = x.split(' = ')[1]
-     print("header_name = ", header_name)
+     #print("header_name = ", header_name)
      y = line_list[i + 1]
      if y[len(y) - 1] == '\n':
          y = y[:len(y) - 1]
      if y[len(y) - 1] != ":":
          header_member = y[:len(y)-1].split(":")[1].split(";")
-         print("header_member", header_member)
+         #print("header_member", header_member)
      else:
          header_member = []
-         print("header_member is empty")
+         #print("header_member is empty")
      HeaderDict[header_name] = header_member
      i = i + 1
   elif x.find("Struct name =") != -1:
      if x[len(x) - 1] == '\n':
          x = x[:len(x) - 2]
      struct_name = x.split(' = ')[1]
-     print("struct_name = ", struct_name)
+     #print("struct_name = ", struct_name)
      y = line_list[i + 1]
      if y[len(y) - 1] == '\n':
          y = y[:len(y) - 1]
      if y[len(y) - 1] != ":":
          struct_member = y[:len(y)-1].split(":")[1].split(";")
-         print("struct_member", struct_member)
+         #print("struct_member", struct_member)
      else:
          struct_member = []
-         print("struct_member is empty")
+         #print("struct_member is empty")
      StructDict[struct_name] = struct_member
      i = i + 1
   elif x.find("Table name =") != -1:
@@ -61,7 +61,7 @@ for i in range(len(line_list)):
      table_name = x.split(' = ')[1]
      if table_name[len(table_name) - 1] == '\n':
          table_name = table_name[:len(table_name) - 1]
-     print("table_name = ", table_name)
+     #print("table_name = ", table_name)
      match_portion = line_list[i + 1]
      action_portion = line_list[i + 2]
      i = i + 2
@@ -69,19 +69,19 @@ for i in range(len(line_list)):
          match_portion = match_portion[:len(match_portion) - 1]
      if match_portion[len(match_portion) - 1] != ":":
          match_member = match_portion[:len(match_portion) - 1].split(":")[1].split(";")
-         print("match_member = ", match_member)
+         #print("match_member = ", match_member)
      else:
          match_member = []
-         print("match_member is empty")
+         #print("match_member is empty")
 
      if action_portion[len(action_portion) - 1] == '\n':
          action_portion = action_portion[:len(action_portion) - 1]
      if action_portion[len(action_portion) - 1] != ":":
          action_member = action_portion[:len(action_portion) - 1].split(":")[1].split(";")
-         print("action_member = ", action_member)
+         #print("action_member = ", action_member)
      else:
          action_member = []
-         print("action_member is empty")
+         #print("action_member is empty")
 
      TabelDict[table_name] = [match_member, action_member]
   elif x.find("Action name =") != -1: 
@@ -90,20 +90,20 @@ for i in range(len(line_list)):
      action_name = x.split(" = ")[1]
      if action_name[len(action_name) - 1] == '\n':
          action_name = action_name[:len(action_name) - 1]
-     print("action_name = ", action_name)
+     #print("action_name = ", action_name)
      fields_portion = line_list[i + 1]
      if fields_portion[len(fields_portion) - 1] == '\n':
          fields_portion = fields_portion[:len(fields_portion) - 1]
      if fields_portion[len(fields_portion) - 1] != ":":
          fields_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
-         print("fields_list = ", fields_list)
+         #print("fields_list = ", fields_list)
      else:
          fields_list = []
-         print("field_list is empty")
+         #print("field_list is empty")
      i = i + 1
      ActionDict[action_name] = fields_list
 
-print(TabelDict)
-print(HeaderDict)
-print(StructDict)
-print(ActionDict)
+print("TabelDict", TabelDict)
+print("HeaderDict", HeaderDict)
+print("StructDict", StructDict)
+print("ActionDict", ActionDict)
