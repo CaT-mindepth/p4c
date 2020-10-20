@@ -31,7 +31,7 @@ def output_relationship(tableA, tableB, TableDict, ActionDict):
     modify_fields_tableB = []
     for i in range(len(TableDict[tableA][1])):
         action_name = TableDict[tableA][1][i]
-        for j in range(ActionDict[action_name]):
+        for j in range(len(ActionDict[action_name])):
             modify_fields_tableA.append(ActionDict[action_name][j])
 
     for i in range(len(TableDict[tableB][1])):
