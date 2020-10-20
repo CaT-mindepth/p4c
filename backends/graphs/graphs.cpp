@@ -47,7 +47,7 @@ void Graphs::add_edge(const vertex_t &from, const vertex_t &to, const cstring &n
         output_file.open("/tmp/table_dep.txt",std::ofstream::app);
     }
     if (table_name_vec[int(from)] != "__START__" and table_name_vec[int(to)] != "__EXIT__") {
-        if (name == "") {
+        if (name == "" or name == "default") {
             output_file << "Table " << table_name_vec[int(from)] << " is implemented before Table " << table_name_vec[int(to)] << std::endl;
         } else {
             output_file << "Match result of Table " << table_name_vec[int(from)] << " will decide whether to implement Table " << table_name_vec[int(to)] << " or not" << std::endl;
