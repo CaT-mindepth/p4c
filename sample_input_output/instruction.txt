@@ -4,108 +4,13 @@ Step1: install p4c by following the README file (Remember to ```sudo make instal
 
 Step2: clone the p4_memory_allocation repo from https://github.com/jaguar-project/p4_memory_allocation
 
-Step3: go to p4_memory_allocation/p4_programs folder
+Step3: Run p4c-graph in build foler
 ```
-cd ~/p4_memory_allocation/p4_programs
+cd build
+./p4c-graphs ~/p4_memory_allocation/p4_programs/simple_examples/test.p4
 ```
 
-Step4: run p4c-bm2-ss on test.p4 benchmark
+Step4: Run table dependency
 ```
-p4c-bm2-ss simple_examples/test.p4
+python3 get_table_dep.py
 ```
-For now the output will be like the following:
-
-=================================================
-Breakpoint 1
-
-options.process(argc, argv) != nullptr is true
-Breakpoint 2
-
-Breakpoint 3
-
-(options.loadIRFromJson == false) = 1
-options.isv1() = 0
-options.file = simple_examples/test.p4
-P4ParserDriver::parse()  sourceFile = simple_examples/test.p4
-P4ParserDriver::parse()  sourceLine = 1
-Output the type for each node. For future purpose.
-i = 0    driver.nodes[0][i]->node_type_name() = Type_Error
-i = 1    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 2    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 3    driver.nodes[0][i]->node_type_name() = Method
-i = 4    driver.nodes[0][i]->node_type_name() = P4Action
-i = 5    driver.nodes[0][i]->node_type_name() = Declaration_MatchKind
-i = 6    driver.nodes[0][i]->node_type_name() = Declaration_MatchKind
-i = 7    driver.nodes[0][i]->node_type_name() = Type_Struct
-i = 8    driver.nodes[0][i]->node_type_name() = Type_Enum
-i = 9    driver.nodes[0][i]->node_type_name() = Type_Enum
-i = 10    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 11    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 12    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 13    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 14    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 15    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 16    driver.nodes[0][i]->node_type_name() = Method
-i = 17    driver.nodes[0][i]->node_type_name() = Method
-i = 18    driver.nodes[0][i]->node_type_name() = Type_Enum
-i = 19    driver.nodes[0][i]->node_type_name() = Method
-i = 20    driver.nodes[0][i]->node_type_name() = Method
-i = 21    driver.nodes[0][i]->node_type_name() = Method
-i = 22    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 23    driver.nodes[0][i]->node_type_name() = Type_Enum
-i = 24    driver.nodes[0][i]->node_type_name() = Type_Extern
-i = 25    driver.nodes[0][i]->node_type_name() = Method
-i = 26    driver.nodes[0][i]->node_type_name() = Method
-i = 27    driver.nodes[0][i]->node_type_name() = Method
-i = 28    driver.nodes[0][i]->node_type_name() = Method
-i = 29    driver.nodes[0][i]->node_type_name() = Method
-i = 30    driver.nodes[0][i]->node_type_name() = Method
-i = 31    driver.nodes[0][i]->node_type_name() = Method
-i = 32    driver.nodes[0][i]->node_type_name() = Method
-i = 33    driver.nodes[0][i]->node_type_name() = Method
-i = 34    driver.nodes[0][i]->node_type_name() = Method
-i = 35    driver.nodes[0][i]->node_type_name() = Method
-i = 36    driver.nodes[0][i]->node_type_name() = Method
-i = 37    driver.nodes[0][i]->node_type_name() = Method
-i = 38    driver.nodes[0][i]->node_type_name() = Type_Parser
-i = 39    driver.nodes[0][i]->node_type_name() = Type_Control
-i = 40    driver.nodes[0][i]->node_type_name() = Type_Control
-i = 41    driver.nodes[0][i]->node_type_name() = Type_Control
-i = 42    driver.nodes[0][i]->node_type_name() = Type_Control
-i = 43    driver.nodes[0][i]->node_type_name() = Type_Control
-i = 44    driver.nodes[0][i]->node_type_name() = Type_Package
-i = 45    driver.nodes[0][i]->node_type_name() = Declaration_Instance
-i = 46    driver.nodes[0][i]->node_type_name() = Declaration_Constant
-i = 47    driver.nodes[0][i]->node_type_name() = Type_Header
-i = 48    driver.nodes[0][i]->node_type_name() = Type_Header
-i = 49    driver.nodes[0][i]->node_type_name() = Type_Header
-i = 50    driver.nodes[0][i]->node_type_name() = Type_Struct
-i = 51    driver.nodes[0][i]->node_type_name() = Type_Struct
-i = 52    driver.nodes[0][i]->node_type_name() = P4Parser
-i = 53    driver.nodes[0][i]->node_type_name() = P4Control
-i = 54    driver.nodes[0][i]->node_type_name() = P4Control
-i = 55    driver.nodes[0][i]->node_type_name() = P4Control
-i = 56    driver.nodes[0][i]->node_type_name() = P4Control
-i = 57    driver.nodes[0][i]->node_type_name() = P4Control
-i = 58    driver.nodes[0][i]->node_type_name() = Declaration_Instance
-Breakpoint 4
-
-Breakpoint 5
-
-CreateBuiltins::postorder(IR::ParserState* state = state start {
-  accept; }
-CreateBuiltins::preorder(IR::P4Table* table->getKey( = { hdr.ethernet.srcAddr: exact;
-  standard_metadata.ingress_port: exact; }
-CreateBuiltins::preorder(IR::P4Table* table->getSizeProperty( =160000
-CreateBuiltins::postorder(IR::ActionList* actions = { }
-CreateBuiltins::preorder(IR::P4Table* table->getKey( = { hdr.ethernet.dstAddr: exact;
-  hdr.vlan_tag_[0].vid: exact;
-  standard_metadata.ingress_port: exact; }
-CreateBuiltins::preorder(IR::P4Table* table->getSizeProperty( =160000
-CreateBuiltins::postorder(IR::ActionListElement* element = set_egress_port;
-CreateBuiltins::postorder(IR::ActionList* actions = { set_egress_port(); }
-CreateBuiltins::preorder(IR::P4Table* table->getKey( = { }
-CreateBuiltins::preorder(IR::P4Table* table->getSizeProperty( =<null>
-CreateBuiltins::postorder(IR::ActionListElement* element = set_pkt;
-CreateBuiltins::postorder(IR::ActionList* actions = { set_pkt(); }
-=================================================
