@@ -79,6 +79,55 @@ def parse_dot_file(input_file):
     path_list = get_path(direct_edge, start_node_list)
     return node_map, edge_map, direct_edge, path_list
 
+def shortest_path(key, v, direct_edge):
+    tmp_list = []
+    for x in direct_edge[key]:
+        tmp_list.append([x])
+
+    # stop until we find our taget
+    jump_while = 0
+    shortest_list = []
+    while 1:
+        if jump_while == 1:
+            break
+
+        curr_len = len(tmp_list)
+        remove_list = []
+        for i in range(curr_len):
+            curr_list = list(tmp_list[i]) # assignment by value; curr_list = tmp_list[i] this is assignment by reference
+            curr_node = curr_list[-1]
+            # Case1: curr_node does not have direct_edge
+            if curr_node not in direct_edge:
+                remove_list.append(curr_list)
+            elif len(direct_edge[curr_node]) == 1:
+                tmp_list[i].append(direct_edge[curr_node][0])
+                if direct_edge[curr_node][0] == v:
+                    shortest_list = tmp_list[i]
+                    jump_while = 1
+            else:
+                assert len(direct_edge[curr_node]) > 1
+                for j in range(len(direct_edge[curr_node])):
+                    if j == 0:
+                        tmp_list[i].append(direct_edge[curr_node][j])
+                        if direct_edge[curr_node][j] == v:
+                            jump_while = 1
+                            shortest_list = tmp_list[i]
+                            break
+                    else:
+                        copy_list = curr_list + [direct_edge[curr_node][j]]
+                        tmp_list.append(copy_list)
+                        if direct_edge[curr_node][j] == v:
+                            jump_while = 1
+                            shortest_list = tmp_list[-1]
+                            break
+        for x in remove_list:
+            tmp_list.remove(x)
+    # path list is the list we return
+    path_list = []
+    path_list.append(key)
+    for item in shortest_list:
+        path_list.append(item)
+    return path_list
 
 TableDict = {}
 HeaderDict = {}
@@ -234,22 +283,56 @@ print("edge_map = ", edge_map)
 print("direct_edge = ", direct_edge)
 print("path_list = ", path_list)
 
-f = open("/tmp/table_dep.txt", "r")
-sys.exit(0)
-for x in f:
-    if x.find("implemented before") != -1:
-        # print("table_name",table_name.group(1,2,3,4))  output table_name ('ingress', 'smac_vlan', 'ingress', 'dmac_vlan')
-        table_name = re.match("Table (\w+).(\w+) is implemented before Table (\w+).(\w+)\n",x)
-        tableA = table_name.group(2)
-        tableB = table_name.group(4)
-        print("tableA = ", tableA)
-        print("tableB = ", tableB)
-        # TODO: figure out the dependency between tableA and tableB
-        output_relationship(tableA, tableB, TableDict, ActionDict)
-    else:
-        assert x.find("Match result") != -1
-        table_name = re.search("Match result of Table (\w+).(\w+) will decide whether to implement Table (\w+).(\w+) or not\n", x)
-        # print("2 table_name", table_name.group(1,2,3,4))
-        tableA = table_name.group(2)
-        tableB = table_name.group(4)
-        print(tableA, "has successor dependency relationship with", tableB)
+print("-----------------------------------")
+# print("first of all, analyze the direct_edge")
+
+successor_dep = []
+# Analyze the dependency of direct edge
+for key in direct_edge:
+    for v in direct_edge[key]:
+        # print("key = ", key)
+        # print("v = ", v)
+        tableA = node_map[key]
+        tableB = node_map[v]
+        # print("tableA = ", tableA)
+        # print("tableB = ", tableB)
+        if tableA == '__START__' or tableB == "__EXIT__":
+            continue
+        # turn format from ingress.smac_vlan to smac_vlan
+        tableA = tableA.split('.')[1]
+        tableB = tableB.split('.')[1]
+        if edge_map[(key, v)] != 'none' and edge_map[(key, v)] != 'default':
+            successor_dep.append(tuple({tableA, tableB}))
+            print(tableA, "has successor dependency relationship with", tableB)
+        else:
+        # turn format from ingress.smac_vlan to smac_vlan
+            output_relationship(tableA, tableB, TableDict, ActionDict)
+
+# Anlyze the dependency of a path
+for key in path_list:
+    if node_map[key] == '__START__':
+        continue
+    for v in path_list[key]:
+        # print("key = ", key)
+        # print("node_map[v] = ", node_map[v])
+
+        # This case means that it has been already processed by direct_edge
+        if key in direct_edge and v in direct_edge[key]:
+            continue
+        if node_map[v] == "__EXIT__":
+            continue
+        path_table = shortest_path(key, v, direct_edge)
+        # print(path_table)
+        flag = 0
+        # prove the correctness of Algo: if step 1 path does not have Successor dependency
+        # then there must be no dependency
+        tableA = node_map[path_table[0]].split('.')[1]
+        tableB = node_map[path_table[1]].split('.')[1]
+        if tuple({tableA, tableB}) in successor_dep:
+            flag = 1
+        tableA = node_map[key].split('.')[1]
+        tableB = node_map[v].split('.')[1]
+        if flag == 1:
+            print(tableA, "has successor dependency relationship with", tableB)
+        else:
+            output_relationship(tableA, tableB, TableDict, ActionDict)
