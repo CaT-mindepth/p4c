@@ -14,3 +14,7 @@ Step4: Run table dependency
 ```
 python3 get_table_dep.py
 ```
+
+TODO1: Add assumptions in assertion and unit test
+TODO2: figure out read and write variable in action block (consider liveness analysis)
+TODO3: prove Successor Dependency and check Jose's algo
