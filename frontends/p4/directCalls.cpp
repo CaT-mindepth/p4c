@@ -33,6 +33,7 @@ class GetPktMember : public Transform {
             return false;
         }
         // We only record which pkt field is used in this particular action
+        // TODO: use AST to replace exist_dot
         const IR::Node* preorder(IR::AssignmentStatement *as) override {if (exist_dot(as->left->toString()) and not_in_vec(as->left->toString())) { pkt_vec.push_back(as->left->toString());}
                                                                         if (exist_dot(as->right->toString()) and not_in_vec(as->right->toString())) { pkt_vec.push_back(as->right->toString());}
                                                                         return as;}
