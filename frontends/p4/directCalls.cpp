@@ -5,10 +5,11 @@ namespace P4 {
 
 class GetPktMember : public Transform {
     public:
-        std::vector<cstring> pkt_vec;
-        bool not_in_vec(cstring s) {
-            for (int i = 0; i < pkt_vec.size(); i++) {
-                if (pkt_vec[i] == s) {
+        std::vector<cstring> pkt_vec_write;
+        std::vector<cstring> pkt_vec_read;
+        bool not_in_vec(cstring s, std::vector<cstring> vec) {
+            for (int i = 0; i < vec.size(); i++) {
+                if (vec[i] == s) {
                     return false;
                 }
             }
@@ -17,9 +18,14 @@ class GetPktMember : public Transform {
         void print_vec() {
             std::ofstream file_to_print;
             file_to_print.open("/tmp/example.txt", std::ofstream::app);
-            file_to_print << "fields modified within an Action:";
-            for (int i = 0; i < pkt_vec.size(); i++) {
-                file_to_print << pkt_vec[i] << ";";
+            file_to_print << "fields written within an Action:";
+            for (int i = 0; i < pkt_vec_write.size(); i++) {
+                file_to_print << pkt_vec_write[i] << ";";
+            }
+            file_to_print << "\n";
+            file_to_print << "fields read within an Action:";
+            for (int i = 0; i < pkt_vec_read.size(); i++) {
+                file_to_print << pkt_vec_read[i] << ";";
             }
             file_to_print << "\n---------\n";
             file_to_print.close();
@@ -34,12 +40,20 @@ class GetPktMember : public Transform {
         }
         // We only record which pkt field is used in this particular action
         // TODO: use AST to replace exist_dot
-        const IR::Node* preorder(IR::AssignmentStatement *as) override {if (exist_dot(as->left->toString()) and not_in_vec(as->left->toString())) { pkt_vec.push_back(as->left->toString());}
-                                                                        if (exist_dot(as->right->toString()) and not_in_vec(as->right->toString())) { pkt_vec.push_back(as->right->toString());}
+        const IR::Node* preorder(IR::AssignmentStatement *as) override {// TODO: check whether LHS of an assignment is the only place where we could modify the fields
+                                                                        if (exist_dot(as->left->toString()) and not_in_vec(as->left->toString(), pkt_vec_write)) { pkt_vec_write.push_back(as->left->toString());}
                                                                         return as;}
-        const IR::Node* preorder(IR::Operation_Binary *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString())) { pkt_vec.push_back(expr->left->toString());}
-                                                                        if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString())) { pkt_vec.push_back(expr->right->toString());}
+        const IR::Node* preorder(IR::Operation_Binary *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString(), pkt_vec_write)) { pkt_vec_write.push_back(expr->left->toString());}
+                                                                        if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString(), pkt_vec_write)) { pkt_vec_write.push_back(expr->right->toString());}
+                                                                       std::cout << "000000000000000  expr = " << expr << std::endl;
                                                                        return expr;};
+        const IR::Node* preorder(IR::Member *mem) {// disregard read and write
+                                                   if (mem->toString().find(".read") == nullptr and mem->toString().find(".write") == nullptr ) {
+                                                       if (not_in_vec(mem->toString(), pkt_vec_read) and not_in_vec(mem->toString(), pkt_vec_write)){
+                                                           pkt_vec_read.push_back(mem->toString());
+                                                       }
+                                                   } 
+                                                   return mem;}
         const IR::Node* preorder(IR::Neg *expr) override {return expr;};
         const IR::Node* preorder(IR::Cmpl *expr) override {return expr;};
         const IR::Node* preorder(IR::LNot *expr) override {std::cout << "LNot *expr = " << expr << std::endl; return expr;};
@@ -54,9 +68,7 @@ class GetPktMember : public Transform {
         const IR::Node* preorder(IR::SubSat *expr) override {std::cout << "SubSat *expr = " << expr << std::endl; return expr;};
         const IR::Node* preorder(IR::Shl *expr) override {std::cout << "Shl *expr = " << expr << std::endl; return expr;};
         const IR::Node* preorder(IR::Shr *expr) override {std::cout << "Shr *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Equ *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString())) { pkt_vec.push_back(expr->left->toString());}
-                                                          if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString())) { pkt_vec.push_back(expr->right->toString());}
-                                                          return expr;};
+        const IR::Node* preorder(IR::Equ *expr) override {return expr;};
         const IR::Node* preorder(IR::Neq *expr) override {std::cout << "Neq *expr = " << expr << std::endl; return expr;};
         const IR::Node* preorder(IR::Lss *expr) override {std::cout << "Lss *expr = " << expr << std::endl; return expr;};
         const IR::Node* preorder(IR::Leq *expr) override {std::cout << "Leq *expr = " << expr << std::endl; return expr;};
