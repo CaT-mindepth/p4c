@@ -39,21 +39,6 @@ Graphs::vertex_t Graphs::add_vertex(const cstring &name, VertexType type) {
 }
 
 void Graphs::add_edge(const vertex_t &from, const vertex_t &to, const cstring &name) {
-    std::ofstream output_file;
-    if (!use_file) {
-        output_file.open("/tmp/table_dep.txt");
-        use_file = true;
-    } else {
-        output_file.open("/tmp/table_dep.txt",std::ofstream::app);
-    }
-    if (table_name_vec[int(from)] != "__START__" and table_name_vec[int(to)] != "__EXIT__") {
-        if (name == "" or name == "default") {
-            output_file << "Table " << table_name_vec[int(from)] << " is implemented before Table " << table_name_vec[int(to)] << std::endl;
-        } else {
-            output_file << "Match result of Table " << table_name_vec[int(from)] << " will decide whether to implement Table " << table_name_vec[int(to)] << " or not" << std::endl;
-        }
-    }
-    output_file.close();
     auto ep = boost::add_edge(from, to, g->root());
     boost::put(boost::edge_name, g->root(), ep.first, name);
 }
