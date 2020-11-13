@@ -313,7 +313,7 @@ for key in direct_edge:
         tableB = tableB.split('.')[1]
         if edge_map[(key, v)] != 'none' and edge_map[(key, v)] != 'default':
             successor_dep.append(tuple({tableA, tableB}))
-            print(tableA, "has successor dependency relationship with", tableB)
+            print(tableA, "has Successor dependency relationship with", tableB)
         else:
         # turn format from ingress.smac_vlan to smac_vlan
             output_relationship(tableA, tableB, TableDict, ActionDict)
