@@ -41,6 +41,15 @@ def get_path(direct_edge, start_node_list):
         start_node_list.pop(0)
     return path_list
 
+def is_table_name(table_name):
+    # Check whether this is a correct table name
+    # TODO: think about better ways for such check.
+    op_list = ['+', '-', '*', '/', '>', '<', '!']
+    for op in op_list:
+        if op in table_name:
+            return False
+    return True
+
 def parse_dot_file(input_file):
     '''
     This function is used to parse .dot file and get path information within the dot file
@@ -59,6 +68,7 @@ def parse_dot_file(input_file):
         # set up the node_map
         node = gv.get_node(item)
         table_name = G.nodes[item]['label']
+        assert is_table_name(table_name), "This node is not a valid table name"
         node_map[node] = table_name
         # add node into start_node_list
         start_node_list.append(item)
