@@ -1,7 +1,22 @@
 import z3
 
 z3_slv = z3.Solver()
-f = open("ILP.txt","r")
+# Input file containing variables and constraints
+'''
+Format input:
+---------------
+Variables:
+x
+y
+z
+Constraints:
+x > 10
+y == x + 2
+z <= 20
+---------------
+'''
+filename = "/tmp/ILP.txt"
+f = open(filename,"r")
 
 
 while 1:
