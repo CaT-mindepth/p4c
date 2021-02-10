@@ -12,6 +12,10 @@ cd build
 
 Step4: Run table dependency
 ```
+pip3 install networkx
+pip3 install pygraphviz
+```
+```
 python3 get_table_dep.py
 ```
 
