@@ -50,8 +50,29 @@ def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_di
             stage += 1
             for i in range(int(alu)):
                 output_str += t1 + "_A_" + str(stage) + "_" + str(i) + " < " + t2 + "_M\n"
+    for ele in action_dep:
+        t1 = ele[0]
+        t2 = ele[1]
+        stage = -1
+        t1_alu = []
+        for alu in alu_dic[t1]:
+            stage += 1
+            for i in range(int(alu)):
+                t1_alu.append(t1 + "_A_" + str(stage) + "_" + str(i))
+        t2_alu = []
+        stage = -1
+        for alu in alu_dic[t2]:
+            stage += 1
+            for i in range(int(alu)):
+                t2_alu.append(t2 + "_A_" + str(stage) + "_" + str(i))
+        for alu1 in t1_alu:
+            for alu2 in t2_alu:
+                output_str += alu1 + " < " + alu2 + "\n"
     # TODO: other kinds of dep
+
     # Generate constraints within actions
+    # TODO: For now, we only consider relationship between stages,
+    # later we should consider dep relationship between alus
     for key in alu_dic:
         stage = 0
         if len(alu_dic[key]) == 1:
