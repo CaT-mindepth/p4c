@@ -68,7 +68,7 @@ def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_di
                     aft_alu_list.append(key + "_A_" + str(stage + i + 1) + "_" + str(j))
                 for pre_alu in pre_alu_list:
                     for aft_alu in aft_alu_list:
-                        output_str += pre_alu + " <= " + aft_alu + "\n"
+                        output_str += pre_alu + " < " + aft_alu + "\n"
     return output_str
 
 def main(argv):
@@ -138,6 +138,9 @@ def main(argv):
     print("table_list = ", table_list)
     # Generate ILP input with format
     str_gen = generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, table_list)
+    f = open("/tmp/ILP.txt", "w")
+    f.write(str_gen)
+    f.close()
     print("str_gen = ", str_gen)
 if __name__ == "__main__":
         main(sys.argv)
