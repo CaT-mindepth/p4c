@@ -1,6 +1,6 @@
 import sys
 
-def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, table_list):
+def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list):
     '''
     Format input:
     ---------------
@@ -25,46 +25,31 @@ def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_di
     # TODO: consider the case where match is spread into multiple stages
     for key in alu_dic:
         print(key)
-        stage = -1
-        for alu in alu_dic[key]:
-            stage += 1
-            for i in range(int(alu)):
-                output_str += key + "_A_" + str(stage) + "_" + str(i) + "\n"
+        for i in range(1, int(alu_dic[key]) + 1):
+            output_str += key + "_A_" + str(i) + "\n"
     # Generate common constraints for match and action (Match < Action)
     output_str += "Constraints:\n"
     for key in alu_dic:
-        stage = -1
-        for alu in alu_dic[key]:
-            stage += 1
-            for i in range(int(alu)):
-                alu_name = key + "_A_" + str(stage) + "_" + str(i)
-                match_name = key + "_M";
-                output_str += match_name + " <= " + alu_name + "\n"
-                output_str += match_name + " >= 0\n"
+        for i in range(1, int(alu_dic[key]) + 1):
+            alu_name = key + "_A_" + str(i)
+            match_name = key + "_M";
+            output_str += match_name + " <= " + alu_name + "\n"
+            output_str += match_name + " >= 0\n"
     # Generate constraints for dep:
     for ele in match_dep:
         t1 = ele[0]
         t2 = ele[1]
-        stage = -1
-        for alu in alu_dic[t1]:
-            stage += 1
-            for i in range(int(alu)):
-                output_str += t1 + "_A_" + str(stage) + "_" + str(i) + " < " + t2 + "_M\n"
+        for i in range(1, int(alu_dic[t1]) + 1):
+            output_str += t1 + "_A_" + str(i) + " < " + t2 + "_M\n"
     for ele in action_dep:
         t1 = ele[0]
         t2 = ele[1]
-        stage = -1
         t1_alu = []
-        for alu in alu_dic[t1]:
-            stage += 1
-            for i in range(int(alu)):
-                t1_alu.append(t1 + "_A_" + str(stage) + "_" + str(i))
+        for i in range(1, int(alu_dic[t1]) + 1):
+            t1_alu.append(t1 + "_A_" + str(i))
         t2_alu = []
-        stage = -1
-        for alu in alu_dic[t2]:
-            stage += 1
-            for i in range(int(alu)):
-                t2_alu.append(t2 + "_A_" + str(stage) + "_" + str(i))
+        for i in range(1, int(alu_dic[t2]) + 1):
+            t2_alu.append(t2 + "_A_" + str(i))
         for alu1 in t1_alu:
             for alu2 in t2_alu:
                 output_str += alu1 + " < " + alu2 + "\n"
@@ -73,23 +58,14 @@ def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_di
     # Generate constraints within actions
     # TODO: For now, we only consider relationship between stages,
     # later we should consider dep relationship between alus
-    for key in alu_dic:
-        stage = 0
-        if len(alu_dic[key]) == 1:
-            continue
-        else:
-            for i in range(len(alu_dic[key]) - 1):
-                # Gen pre_alu_list
-                pre_alu_list = []
-                for j in range(int(alu_dic[key][i])):
-                    pre_alu_list.append(key + "_A_" + str(stage + i) + "_" + str(j))
-                # Gen aft_alu_list
-                aft_alu_list = []
-                for j in range(int(alu_dic[key][i + 1])):
-                    aft_alu_list.append(key + "_A_" + str(stage + i + 1) + "_" + str(j))
-                for pre_alu in pre_alu_list:
-                    for aft_alu in aft_alu_list:
-                        output_str += pre_alu + " < " + aft_alu + "\n"
+    for key in alu_dep_dic:
+        # alu_dep_dic =  {'T1': [{'1', '2'}, {'1', '3'}, {'2', '4'}, {'5', '3'}]}
+        for pair in alu_dep_dic[key]:
+            node1 = pair[0]
+            node2 = pair[1]
+            alu1 = key + '_A_' + node1
+            alu2 = key + '_A_' + node2
+            output_str += alu1 + ' < ' + alu2 + '\n'
     return output_str
 
 def main(argv):
@@ -105,7 +81,8 @@ def main(argv):
     action_dep = []
     successor_dep = []
     reverse_dep = []
-    alu_dic = {} # key: table name; val: alu per stage
+    alu_dic = {} # key: table name; val: total number of alus
+    alu_dep_dic = {} # key: table name; val: list of alu dep
     while 1:
         line = f.readline()
         if line: 
@@ -144,21 +121,36 @@ def main(argv):
             while 1:
                 line = f.readline()
                 if line:
-                    # Format: T1:1,2
+                    # Format: T1:5,(1,2),(1,3),(2,4),(3,5)
                     line = line[:-1]
                     table_name = line.split(':')[0]
                     line = line.split(':')[1]
-                    alu_num_list = line.split(',')
-                    alu_dic[table_name] = alu_num_list
+                    print("line = ", line)
+                    alu_num = line.split(';')[0]
+                    alu_dep_list = line.split(';')
+                    for i in range(1, len(alu_dep_list)):
+                        pair = alu_dep_list[i]
+                        # pair is in the format: (1,2)
+                        pair = pair[1:]
+                        pair = pair[:-1]
+                        node1 = pair.split(',')[0]
+                        node2 = pair.split(',')[1]
+                        if alu_dep_dic.get(table_name) == None:
+                            alu_dep_dic[table_name] = []
+                        alu_dep_dic[table_name].append([node1, node2])
+                    alu_dic[table_name] = alu_num
                 else:
                     break
         else:
             break
     print("match_dep = ", match_dep)
     print("alu_dic = ", alu_dic)
+    # Example output: alu_dic =  {'T1': '5'}
+    print("alu_dep_dic = ", alu_dep_dic)
+    # Example output: alu_dep_dic =  {'T1': [['1', '2'], ['1', '3'], ['2', '4'], ['3', '5']]
     print("table_list = ", table_list)
     # Generate ILP input with format
-    str_gen = generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, table_list)
+    str_gen = generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list)
     f = open("/tmp/ILP.txt", "w")
     f.write(str_gen)
     f.close()
