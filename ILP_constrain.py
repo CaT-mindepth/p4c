@@ -127,6 +127,10 @@ def main(argv):
                     line = line.split(':')[1]
                     print("line = ", line)
                     alu_num = line.split(';')[0]
+                    alu_dic[table_name] = alu_num
+                    # No alu-level dep if there is only one alu
+                    if line.split(';')[1] == '':
+                        continue
                     alu_dep_list = line.split(';')
                     for i in range(1, len(alu_dep_list)):
                         pair = alu_dep_list[i]
@@ -138,7 +142,6 @@ def main(argv):
                         if alu_dep_dic.get(table_name) == None:
                             alu_dep_dic[table_name] = []
                         alu_dep_dic[table_name].append([node1, node2])
-                    alu_dic[table_name] = alu_num
                 else:
                     break
         else:
