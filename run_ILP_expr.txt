@@ -1,0 +1,14 @@
+Step1: randomly generate the ILP constraints
+```
+python3 ILP_Info_gen.py <Table num>
+```
+
+Step2: turn the ILP constraints to what is readable by ILP solver
+```
+python3 ILP_constrain.py <Dep+Act filename>
+```
+
+Step3: solve ILP problem
+```
+python3 ILP_solver.py
+```
