@@ -56,8 +56,6 @@ def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_di
     # TODO: other kinds of dep
 
     # Generate constraints within actions
-    # TODO: For now, we only consider relationship between stages,
-    # later we should consider dep relationship between alus
     for key in alu_dep_dic:
         # alu_dep_dic =  {'T1': [{'1', '2'}, {'1', '3'}, {'2', '4'}, {'5', '3'}]}
         for pair in alu_dep_dic[key]:
