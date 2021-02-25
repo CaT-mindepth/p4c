@@ -5,6 +5,8 @@ def main(argv):
     """main program."""
     if len(argv) >= 3:
         print("Usage: python3 " + argv[0] + " <ILP filename>(optional)")
+    # Set largest stage num
+    largest_stage_num = 12
     z3_slv = z3.Optimize()
     # Input file containing variables and constraints
     '''
@@ -28,7 +30,8 @@ def main(argv):
         filename = "/tmp/ILP.txt"
     f = open(filename,"r")
     
-    var_list = [] 
+    match_list = []
+    action_list = []
     while 1:
         l = f.readline()
         if l == "Variables:\n":
@@ -38,7 +41,10 @@ def main(argv):
                     break
                 # remove /n from this string
                 l = l[:-1]
-                var_list.append(l)
+                if l[-1] == 'M':
+                    match_list.append(l)
+                else:
+                    action_list.append(l)
                 # Ref website:https://www.programiz.com/python-programming/methods/built-in/exec
                 exec(l+'=z3.Int(\'%s\')'%l)
         elif l:           
@@ -46,8 +52,12 @@ def main(argv):
             z3_slv.add(eval(l))
         else:
             break
-    for v in var_list:
+    for v in match_list:
         z3_slv.add(eval("cost >= " + v))
+    for v in action_list:
+        z3_slv.add(eval("cost >= " + v))
+    # for stage_num in range(largest_stage_num):
+
     h = z3_slv.minimize(cost)
     print(z3_slv.check())
     print(z3_slv.lower(h))
