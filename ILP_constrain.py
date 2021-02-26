@@ -19,8 +19,8 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     alu_stage_c = [And(alu_s >= 0, alu_s < total_stage) for alu_s in z3_alu_list]
 
     # TODO: set the total number of available ALUs per stage to be a parameter
-    # For now, we just assume the total available ALUs per stage is 2
-    avail_alu = 2
+    # For now, we just assume the total available ALUs per stage is 200
+    avail_alu = 200
     alu_pos_c = [And(alu_pos >= 0, alu_pos < avail_alu) for alu_pos in z3_alu_list_pos]
 
     # Constraint 3: alu-level dependency
