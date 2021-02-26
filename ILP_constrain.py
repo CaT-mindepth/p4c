@@ -1,70 +1,83 @@
 import sys
+from z3 import *
 
-def generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list):
-    '''
-    Format input:
-    ---------------
-    Variables:
-    x
-    y
-    z
-    Constraints:
-    x > 10
-    y == x + 2
-    z <= 20
-    ---------------
-    '''
-    output_str = ""
-    # Generate Variables:
-    output_str += "Variables:\n"
-    # Generate Match part
-    for t in table_list:
-        output_str += t + "_M\n"
-    # Generate Action part
-    # TODO: support multiple actions
-    # TODO: consider the case where match is spread into multiple stages
-    for key in alu_dic:
-        print(key)
-        for i in range(1, int(alu_dic[key]) + 1):
-            output_str += key + "_A_" + str(i) + "\n"
-    # Generate common constraints for match and action (Match < Action)
-    output_str += "Constraints:\n"
-    for key in alu_dic:
-        for i in range(1, int(alu_dic[key]) + 1):
-            alu_name = key + "_A_" + str(i)
-            match_name = key + "_M";
-            output_str += match_name + " <= " + alu_name + "\n"
-            output_str += match_name + " >= 0\n"
-    # Generate constraints for dep:
+def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list):
+    # Get the match and alu list
+    z3_match_list = [Int('%s_M' % t) for t in table_list]
+    z3_alu_list = [Int('%s_A_%s' % (t, i)) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+    # z3_alu_list_pos stores which ALU within the stage is used for a particular table's Action's ALU
+    z3_alu_list_pos = [Int('%s_A_%s_pos' % (t, i)) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+
+    # Constraint 1: Match happens before any action 
+    match_then_action_c = [And(Int('%s_M' % t) <= Int('%s_A_%s' % (t, i))) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+
+    # Constraint 2: All stage numbers cannot be greater than total available stage
+    # TODO: set the total available stage as the parameter
+    # For now, we just assume the total available stages is 12
+    total_stage = 12
+    match_stage_c = [And(match_s >= 0, match_s < total_stage) for match_s in z3_match_list]
+    alu_stage_c = [And(alu_s >= 0, alu_s < total_stage) for alu_s in z3_alu_list]
+
+    # TODO: set the total number of available ALUs per stage to be a parameter
+    # For now, we just assume the total available ALUs per stage is 2
+    avail_alu = 2
+    alu_pos_c = [And(alu_pos >= 0, alu_pos < avail_alu) for alu_pos in z3_alu_list_pos]
+
+    # Constraint 3: alu-level dependency
+    alu_level_c = []
+    for key in alu_dep_dic:
+        for pair in alu_dep_dic[key]:
+            alu_level_c.append(And(Int('%s_A_%s' % (key, pair[0])) < Int('%s_A_%s' % (key, pair[1]))))
+
+    # Constraint 4: If two ALU are within the same stage, then the cannot use the same alu
+    alu_pos_rel_c = [Implies(z3_alu_list[i] == z3_alu_list[j],
+                         z3_alu_list_pos[i] != z3_alu_list_pos[j]) 
+                for i in range(len(z3_alu_list)) for j in range(i)]
+
+    # Constraint 5: set a variable cost which is our objective function whose value is >= to any other vars
+    cost = Int('cost')
+    cost_with_match_c = [And(cost >= m_v) for m_v in z3_match_list]
+    cost_with_alu_c = [And(cost >= alu_v) for alu_v in z3_alu_list]
+
+    # Constraint 6: constraints for match, action, successor and reverse dep
+    match_dep_c = []
     for ele in match_dep:
         t1 = ele[0]
         t2 = ele[1]
         for i in range(1, int(alu_dic[t1]) + 1):
-            output_str += t1 + "_A_" + str(i) + " < " + t2 + "_M\n"
+            match_dep_c.append(And(Int('%s_A_%s' % (t1, i)) < Int('%s_M' % t2)))
+    action_dep_c = []
     for ele in action_dep:
         t1 = ele[0]
         t2 = ele[1]
-        t1_alu = []
         for i in range(1, int(alu_dic[t1]) + 1):
-            t1_alu.append(t1 + "_A_" + str(i))
-        t2_alu = []
-        for i in range(1, int(alu_dic[t2]) + 1):
-            t2_alu.append(t2 + "_A_" + str(i))
-        for alu1 in t1_alu:
-            for alu2 in t2_alu:
-                output_str += alu1 + " < " + alu2 + "\n"
-    # TODO: other kinds of dep
+            for j in range(1, int(alu_dic[t2]) + 1):
+                action_dep_c.append(And(Int('%s_A_%s' % (t1, i)) < Int('%s_A_%s' % (t2, j))))
+    successor_dep_c = []
+    reverse_dep_c = []
 
-    # Generate constraints within actions
-    for key in alu_dep_dic:
-        # alu_dep_dic =  {'T1': [{'1', '2'}, {'1', '3'}, {'2', '4'}, {'5', '3'}]}
-        for pair in alu_dep_dic[key]:
-            node1 = pair[0]
-            node2 = pair[1]
-            alu1 = key + '_A_' + node1
-            alu2 = key + '_A_' + node2
-            output_str += alu1 + ' < ' + alu2 + '\n'
-    return output_str
+    # print("z3_match_list = ", z3_match_list)
+    # print("z3_alu_list = ", z3_alu_list)
+    # print("match_then_action_c", match_then_action_c)
+    # print("alu_pos_rel_c", alu_pos_rel_c)
+    # print("cost_with_alu_c = ", cost_with_alu_c)
+    # print('alu_level_c =', alu_level_c)
+    # print('match_dep_c = ', match_dep_c)
+    # print('action_dep_c = ', action_dep_c)
+    # print('cost_with_alu_c = ', cost_with_alu_c)
+    opt = Optimize()
+    opt.add(match_then_action_c + 
+            match_stage_c + alu_stage_c + alu_pos_c +
+            alu_level_c + 
+            alu_pos_rel_c +
+            cost_with_match_c + cost_with_alu_c + alu_pos_rel_c + 
+            match_dep_c + action_dep_c + successor_dep_c + reverse_dep_c)
+    h = opt.minimize(cost)
+    print(opt.check())
+    print(opt.model())
+    # Output the obective function's value Ref:https://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/guide-examples.htm
+    print('objective function cost = %s' % opt.model()[cost])
+    # TODO: output the layout of ALU grid
 
 def main(argv):
     """main program."""
@@ -144,17 +157,13 @@ def main(argv):
                     break
         else:
             break
-    print("match_dep = ", match_dep)
     print("alu_dic = ", alu_dic)
     # Example output: alu_dic =  {'T1': '5'}
     print("alu_dep_dic = ", alu_dep_dic)
     # Example output: alu_dep_dic =  {'T1': [['1', '2'], ['1', '3'], ['2', '4'], ['3', '5']]
     print("table_list = ", table_list)
-    # Generate ILP input with format
-    str_gen = generate_ILP_input(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list)
-    f = open("/tmp/ILP.txt", "w")
-    f.write(str_gen)
-    f.close()
-    print("str_gen = ", str_gen)
+    # Generate ILP input with format 
+    gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic, alu_dep_dic, table_list)
+
 if __name__ == "__main__":
         main(sys.argv)
