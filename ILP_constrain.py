@@ -5,8 +5,14 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # Get the match and alu list
     z3_match_list = [Int('%s_M' % t) for t in table_list]
     z3_alu_list = [Int('%s_A_%s' % (t, i)) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
-    # z3_alu_list_pos stores which ALU within the stage is used for a particular table's Action's ALU
-    z3_alu_list_pos = [Int('%s_A_%s_pos' % (t, i)) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+
+    total_stage = 12
+    # z3_alu_loc_vec is a list of 0/1 which specifies which stage this ALU is at
+    z3_alu_loc_vec = [[Int('%s_A_%s_stage_%s' % (t, i, k)) for k in range(total_stage)] for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+    z3_alu_loc_vec_transpose = [[z3_alu_loc_vec[i][j] for i in range(len(z3_alu_loc_vec))] for j in range(len(z3_alu_loc_vec[0]))]
+    # print(z3_alu_loc_vec)
+    # print(z3_alu_loc_vec_transpose)
+    # sys.exit(1)
 
     # Constraint 1: Match happens before any action 
     match_then_action_c = [And(Int('%s_M' % t) <= Int('%s_A_%s' % (t, i))) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
@@ -14,14 +20,12 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # Constraint 2: All stage numbers cannot be greater than total available stage
     # TODO: set the total available stage as the parameter
     # For now, we just assume the total available stages is 12
-    total_stage = 12
     match_stage_c = [And(match_s >= 0, match_s < total_stage) for match_s in z3_match_list]
     alu_stage_c = [And(alu_s >= 0, alu_s < total_stage) for alu_s in z3_alu_list]
 
     # TODO: set the total number of available ALUs per stage to be a parameter
-    # For now, we just assume the total available ALUs per stage is 200
+    # For now, we just assume the total available ALUs per stage is 2
     avail_alu = 200
-    alu_pos_c = [And(alu_pos >= 0, alu_pos < avail_alu) for alu_pos in z3_alu_list_pos]
 
     # Constraint 3: alu-level dependency
     alu_level_c = []
@@ -29,10 +33,15 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         for pair in alu_dep_dic[key]:
             alu_level_c.append(And(Int('%s_A_%s' % (key, pair[0])) < Int('%s_A_%s' % (key, pair[1]))))
 
-    # Constraint 4: If two ALU are within the same stage, then the cannot use the same alu
-    alu_pos_rel_c = [Implies(z3_alu_list[i] == z3_alu_list[j],
-                         z3_alu_list_pos[i] != z3_alu_list_pos[j]) 
-                for i in range(len(z3_alu_list)) for j in range(i)]
+    # Constraint 4: An ALU must be allocated to one and exactly one block
+    alu_pos_rel_c = []
+    for i in range(len(z3_alu_list)):
+        for k in range(total_stage):
+            alu_pos_rel_c.append(Implies(z3_alu_list[i] == k, z3_alu_loc_vec[i][k] == 1))
+
+    alu_pos_val_c = [And(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
+    alu_row_sum_c = [Sum(z3_alu_loc_vec[i]) == 1 for i in range(len(z3_alu_loc_vec))]
+    alu_col_sum_c = [Sum(z3_alu_loc_vec_transpose[i]) <= avail_alu for i in range(len(z3_alu_loc_vec_transpose))]
 
     # Constraint 5: set a variable cost which is our objective function whose value is >= to any other vars
     cost = Int('cost')
@@ -65,12 +74,14 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # print('match_dep_c = ', match_dep_c)
     # print('action_dep_c = ', action_dep_c)
     # print('cost_with_alu_c = ', cost_with_alu_c)
+    print("Come here------------------------")
+    set_option("parallel.enable", True)
     opt = Optimize()
     opt.add(match_then_action_c + 
-            match_stage_c + alu_stage_c + alu_pos_c +
+            match_stage_c + alu_stage_c +
             alu_level_c + 
-            alu_pos_rel_c +
-            cost_with_match_c + cost_with_alu_c + alu_pos_rel_c + 
+            alu_pos_rel_c + alu_pos_val_c + alu_row_sum_c + alu_col_sum_c +
+            cost_with_match_c + cost_with_alu_c + 
             match_dep_c + action_dep_c + successor_dep_c + reverse_dep_c)
     h = opt.minimize(cost)
     print(opt.check())
