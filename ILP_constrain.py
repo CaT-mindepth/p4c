@@ -15,7 +15,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # sys.exit(1)
 
     # Constraint 1: Match happens before any action 
-    match_then_action_c = [And(Int('%s_M' % t) <= Int('%s_A_%s' % (t, i))) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
+    match_then_action_c = [(Int('%s_M' % t) <= Int('%s_A_%s' % (t, i))) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
 
     # Constraint 2: All stage numbers cannot be greater than total available stage
     # TODO: set the total available stage as the parameter
@@ -31,7 +31,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     alu_level_c = []
     for key in alu_dep_dic:
         for pair in alu_dep_dic[key]:
-            alu_level_c.append(And(Int('%s_A_%s' % (key, pair[0])) < Int('%s_A_%s' % (key, pair[1]))))
+            alu_level_c.append((Int('%s_A_%s' % (key, pair[0])) < Int('%s_A_%s' % (key, pair[1]))))
 
     # Constraint 4: An ALU must be allocated to one and exactly one block
     alu_pos_rel_c = []
@@ -39,14 +39,14 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         for k in range(total_stage):
             alu_pos_rel_c.append(Implies(z3_alu_list[i] == k, z3_alu_loc_vec[i][k] == 1))
 
-    alu_pos_val_c = [And(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
+    alu_pos_val_c = [(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
     alu_row_sum_c = [Sum(z3_alu_loc_vec[i]) == 1 for i in range(len(z3_alu_loc_vec))]
     alu_col_sum_c = [Sum(z3_alu_loc_vec_transpose[i]) <= avail_alu for i in range(len(z3_alu_loc_vec_transpose))]
 
     # Constraint 5: set a variable cost which is our objective function whose value is >= to any other vars
     cost = Int('cost')
-    cost_with_match_c = [And(cost >= m_v) for m_v in z3_match_list]
-    cost_with_alu_c = [And(cost >= alu_v) for alu_v in z3_alu_list]
+    cost_with_match_c = [(cost >= m_v) for m_v in z3_match_list]
+    cost_with_alu_c = [(cost >= alu_v) for alu_v in z3_alu_list]
 
     # Constraint 6: constraints for match, action, successor and reverse dep
     match_dep_c = []
@@ -54,14 +54,14 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         t1 = ele[0]
         t2 = ele[1]
         for i in range(1, int(alu_dic[t1]) + 1):
-            match_dep_c.append(And(Int('%s_A_%s' % (t1, i)) < Int('%s_M' % t2)))
+            match_dep_c.append((Int('%s_A_%s' % (t1, i)) < Int('%s_M' % t2)))
     action_dep_c = []
     for ele in action_dep:
         t1 = ele[0]
         t2 = ele[1]
         for i in range(1, int(alu_dic[t1]) + 1):
             for j in range(1, int(alu_dic[t2]) + 1):
-                action_dep_c.append(And(Int('%s_A_%s' % (t1, i)) < Int('%s_A_%s' % (t2, j))))
+                action_dep_c.append((Int('%s_A_%s' % (t1, i)) < Int('%s_A_%s' % (t2, j))))
     successor_dep_c = []
     reverse_dep_c = []
 
@@ -89,6 +89,8 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # Output the obective function's value Ref:https://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/guide-examples.htm
     print('objective function cost = %s' % opt.model()[cost])
     # TODO: output the layout of ALU grid
+    # Output smt2lib format
+    # print(opt.sexpr())
 
 def main(argv):
     """main program."""
