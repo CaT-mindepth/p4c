@@ -286,7 +286,8 @@ print("HeaderDict", HeaderDict)
 print("StructDict", StructDict)
 print("ActionDict", ActionDict)
 
-input_file = "/home/xiangyug/p4c/build/ingress.dot" 
+#TODO: get the correct input filename
+input_file = "/home/xiangyug/p4c/ingress.dot" 
 node_map, edge_map, direct_edge, path_list = parse_dot_file(input_file)
 print("node_map = ", node_map)
 print("edge_map = ", edge_map)
@@ -332,7 +333,7 @@ for key in path_list:
         if node_map[v] == "__EXIT__":
             continue
         path_table = shortest_path(key, v, direct_edge)
-        # print(path_table)
+        # print("path_table =", path_table)
         flag = 0
         # prove the correctness of Algo: if step 1 path does not have Successor dependency
         # then there must be no dependency
@@ -343,6 +344,6 @@ for key in path_list:
         tableA = node_map[key].split('.')[1]
         tableB = node_map[v].split('.')[1]
         if flag == 1:
-            print(tableA, "has successor dependency relationship with", tableB)
+            print(tableA, "has Successor dependency relationship with", tableB)
         else:
             output_relationship(tableA, tableB, TableDict, ActionDict)
