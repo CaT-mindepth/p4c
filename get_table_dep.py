@@ -139,10 +139,10 @@ def shortest_path(key, v, direct_edge):
         path_list.append(item)
     return path_list
 
-TableDict = {}
-HeaderDict = {}
-StructDict = {}
-ActionDict = {}
+TableDict = {} # key: table name; val: [match_fields list, action list]
+HeaderDict = {} # key: header name; val: list of members inside the header
+StructDict = {} # key: struct name; val: list of members inside a struct
+ActionDict = {} # key: action name; val: [list of fields written, list of fields read]
 
 f =  open("/tmp/example.txt", "r")
 # key is table name and value is a list of list including 
@@ -168,22 +168,29 @@ def output_relationship(tableA, tableB, TableDict, ActionDict):
     # Match dependencies
     modify_fields_tableA = []
     modify_fields_tableB = []
+    read_fields_tableA = []
+    read_fields_tableB = []
     for i in range(len(TableDict[tableA][1])):
         action_name = TableDict[tableA][1][i]
-        for j in range(len(ActionDict[action_name])):
-            modify_fields_tableA.append(ActionDict[action_name][j])
+        for j in range(len(ActionDict[action_name][0])):
+            modify_fields_tableA.append(ActionDict[action_name][0][j])
+        for j in range(len(ActionDict[action_name][1])):
+            read_fields_tableA.append(ActionDict[action_name][1][j])
 
     for i in range(len(TableDict[tableB][1])):
         action_name = TableDict[tableB][1][i]
-        for j in range(len(ActionDict[action_name])):
-            modify_fields_tableB.append(ActionDict[action_name][j])
+        for j in range(len(ActionDict[action_name][0])):
+            modify_fields_tableB.append(ActionDict[action_name][0][j])
+        for j in range(len(ActionDict[action_name][1])):
+            read_fields_tableB.append(ActionDict[action_name][1][j])
+
     match_fields_tableA = TableDict[tableA][0]
     match_fields_tableB = TableDict[tableB][0]
     # Match dependency: Table A modifies a field Table B matches
     if overlap(modify_fields_tableA, match_fields_tableB):
         print(tableA, "has Match dependency relationship with", tableB)
     # Action dependency: Table A and B both change the same field, but the end-result should be that of the later Table B
-    elif overlap(modify_fields_tableA, modify_fields_tableB):
+    elif overlap(modify_fields_tableA, modify_fields_tableB + read_fields_tableB) or overlap(modify_fields_tableA + read_fields_tableA, modify_fields_tableB):
         print(tableA, "has Action dependency relationship with", tableB)
     # Reverse dependency: Table A matches on a field that Table B modifies,
     elif overlap(match_fields_tableA, modify_fields_tableB):
@@ -273,13 +280,23 @@ for i in range(len(line_list)):
      if fields_portion[len(fields_portion) - 1] == '\n':
          fields_portion = fields_portion[:len(fields_portion) - 1]
      if fields_portion[len(fields_portion) - 1] != ":":
-         fields_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
+         fields_written_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
          #print("fields_list = ", fields_list)
      else:
-         fields_list = []
+         fields_written_list = []
          #print("field_list is empty")
      i = i + 1
-     ActionDict[action_name] = fields_list
+     # Consider the fields used as read
+     fields_portion = line_list[i + 1]
+     if fields_portion[len(fields_portion) - 1] == '\n':
+         fields_portion = fields_portion[:len(fields_portion) - 1]
+     if fields_portion[len(fields_portion) - 1] != ":":
+         fields_read_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
+         #print("fields_list = ", fields_list)
+     else:
+         fields_read_list = []
+         #print("field_list is empty")
+     ActionDict[action_name] = [fields_written_list, fields_read_list]
 
 print("TableDict", TableDict)
 print("HeaderDict", HeaderDict)
