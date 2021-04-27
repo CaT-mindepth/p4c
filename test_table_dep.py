@@ -29,11 +29,15 @@ for i in range(len(filename_list)):
         sys.exit(1)
     if filename_list[i] == 'test_action.p4':
         assert output.find('smac_vlan has Action dependency relationship with dmac_vlan') != -1, 'Test does not pass for ' + filename_list[i]
+        print("test_action.p4 passes")
     if filename_list[i] == 'test_match.p4':
         assert output.find('smac_vlan has Match dependency relationship with dmac_vlan') != -1, 'Test does not pass for ' + filename_list[i]
+        print("test_match.p4 passes")
     if filename_list[i] == 'test_reverse.p4':
         assert output.find('smac_vlan has Reverse dependency relationship with dmac_vlan') != -1, 'Test does not pass for ' + filename_list[i]
+        print("test_reverse.p4 passes")
     if filename_list[i] == 'test_successor.p4':
         assert output.find('dmac_vlan has Successor dependency relationship with sample') != -1, 'Test does not pass for ' + filename_list[i]
+        print("test_successor.p4 passes")
 
-print('Test passes!!')
+print('All tests pass!!')
