@@ -145,7 +145,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
 
 def main(argv):
     """main program."""
-    """Format: python3 ILP_constrain.py <filename>"""
+    """Format: python3 ILP_Gurobi.py <filename>"""
     if len(argv) != 2:
         print("Usage: python3 " + argv[0] + " <Dep+Act filename>")
         sys.exit(1)
