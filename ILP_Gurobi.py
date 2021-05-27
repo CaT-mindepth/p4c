@@ -127,8 +127,11 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     m.optimize()
     if m.status == GRB.OPTIMAL:    
         print('Optimal objective: %g' % m.objVal)
+        print("Following is the result we want:*****************")
         for v in m.getVars():
-            print('%s %g' % (v.varName, v.x))
+            if v.varName.find('stage') == -1 and v.varName[-1] != 'M':
+                print('%s %g' % (v.varName, v.x))
+        print("************************************************")
         print('Obj: %g' % m.objVal)
     else:
         print("Sad")
