@@ -41,9 +41,11 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     # for t in table_list:
     #    for i in range(1, int(alu_dic[t]) + 1):
     #        m.addConstr('%s_M' % t <='%s_A_%s' % (t, i))
+    '''
     for t in table_list:
         for i in range(1, int(alu_dic[t]) + 1):
             m.addConstr(m.getVarByName('%s_M' % t) <= m.getVarByName('%s_A_%s' % (t, i)))
+    '''
     # match_then_action_c = [And(Int('%s_M' % t) <= Int('%s_A_%s' % (t, i))) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
 
     # Constraint 2: All stage numbers cannot be greater than total available stage
@@ -60,7 +62,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
 
     # TODO: set the total number of available ALUs per stage to be a parameter
     # For now, we just assume the total available ALUs per stage is 2
-    avail_alu = 200
+    avail_alu = 16
 
     # Constraint 3: alu-level dependency
     # alu_level_c = []
@@ -196,7 +198,7 @@ def main(argv):
             while 1:
                 line = f.readline()
                 if line:
-                    # Format: T1:5,(1,2),(1,3),(2,4),(3,5)
+                    # Format: T1:5;(1,2);(3,4);(4,5)
                     line = line[:-1]
                     table_name = line.split(':')[0]
                     line = line.split(':')[1]
@@ -207,6 +209,7 @@ def main(argv):
                     if line.split(';')[1] == '':
                         continue
                     alu_dep_list = line.split(';')
+                    print("len(alu_dep_list) =", alu_dep_list)
                     for i in range(1, len(alu_dep_list)):
                         pair = alu_dep_list[i]
                         # pair is in the format: (1,2)
