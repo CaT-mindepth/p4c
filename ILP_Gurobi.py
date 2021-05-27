@@ -129,7 +129,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         print('Optimal objective: %g' % m.objVal)
         print("Following is the result we want:*****************")
         for v in m.getVars():
-            if v.varName.find('stage') == -1 and v.varName[-1] != 'M':
+            if v.varName.find('stage') == -1 and v.varName[-1] != 'M' and v.varName != 'cost':
                 print('%s %g' % (v.varName, v.x))
         print("************************************************")
         print('Obj: %g' % m.objVal)
