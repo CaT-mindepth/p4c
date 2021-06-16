@@ -27,7 +27,19 @@ class FinalCodeFormat : public Transform {
 class CheckGetMember : public Transform {
     const ReferenceMap* refMap;
     std::map<cstring, cstring> rename_map;
+    std::map<cstring, int> pkt_map;
 public:
+    void print_map() {
+	for (auto &a : rename_map) {
+	    std::cout << a.first << ": " << a.second << std::endl;
+	}
+    }
+    std::map<cstring, cstring> get_map() {
+	return rename_map;
+    }
+    std::map<cstring, int> get_pkt() {
+	return pkt_map;
+    }
     explicit CheckGetMember(const ReferenceMap* refMap): refMap(refMap)
     { CHECK_NULL(refMap); setName("CheckGetMember"); }
     std::string output_str = "";
@@ -102,42 +114,11 @@ public:
     //     return mcs;
     // };
     // const IR::Node* preorder(IR::IfStatement *ifs) override {std::cout << "IfStatement *if = " << ifs << std::endl; return ifs;};
-    // const IR::Node* preorder(IR::Operation_Binary *expr) override {std::cout << "Operation_Binary *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Operation_Ternary *expr) override {std::cout << "Operation_Ternary *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Neg *expr) override {std::cout << "Neg *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Cmpl *expr) override {std::cout << "Cmpl *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::LNot *expr) override {std::cout << "LNot *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Mul *expr) override {std::cout << "Mul *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Div *expr) override {std::cout << "Div *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Mod *expr) override {std::cout << "Mod *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Add *expr) override {std::cout << "Add *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::AddSat *expr) override {std::cout << "AddSat *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Sub *expr) override {std::cout << "Sub *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::SubSat *expr) override {std::cout << "SubSat *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Shl *expr) override {std::cout << "Shl *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Shr *expr) override {std::cout << "Shr *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Equ *expr) override {std::cout << "Equ *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Neq *expr) override {std::cout << "Neq *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Lss *expr) override {std::cout << "Lss *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Leq *expr) override {std::cout << "Leq *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Grt *expr) override {std::cout << "Grt *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Geq *expr) override {std::cout << "Geq *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::BAnd *expr) override {std::cout << "BAnd *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::BOr *expr) override {std::cout << "BOr *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::BXor *expr) override {std::cout << "BXor *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::LAnd *expr) override {std::cout << "LAnd *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::LOr *expr) override {std::cout << "LOr *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Concat *expr) override {std::cout << "Concat *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Mask *expr) override {std::cout << "Mask *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Range *expr) override {std::cout << "Range *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::ArrayIndex *expr) override {std::cout << "ArrayIndex *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Slice *expr) override {std::cout << "Slice *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Mux *expr) override {std::cout << "Mux *expr = " << expr << std::endl; return expr;};
-    // const IR::Node* preorder(IR::Cast *expr) override {std::cout << "Cast *expr = " << expr << std::endl; return expr;};
     const IR::Node* preorder(IR::Member *m) override {
         // std::cout << "Member *m = " << m << std::endl;
         // std::cout << "m->member = " << m->member << std::endl;
         if (m->member.toString() != cstring("read") and m->member.toString() != cstring("write")) {
+	    pkt_map[m->member.toString()] = 1;
             m->expr = new IR::PathExpression(cstring("pkt"));
         }
         return m;
@@ -189,12 +170,24 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
             CheckGetMember chgm(this->refMap); 
             IR::Node *copy_node = action->body->components[i]->getNode()->clone();
             auto mid_node = copy_node->apply(chgm);
+	    std::map<cstring, cstring> domino_map = chgm.get_map();
+	    std::map<cstring, int> domino_pkt = chgm.get_pkt();
+
             FinalCodeFormat fcf;
             auto fin_node = mid_node->apply(fcf);
             // std::cout << "=========================" << std::endl;
             // std::cout << "mid_node = " << mid_node << std::endl;
-            std::cout << "Parsed action body = " << fin_node << std::endl;
-            // std::cout << "action->body->components[i]->getNode() = " << action->body->components[i]->getNode() << std::endl;
+	    // Output Domino program
+	    std::cout << "Domino program = \n";
+	    std::cout << "struct Packet {\n";
+	    for (auto &a : domino_pkt) {
+		std::cout << "int " << a.first << ";\n";
+	    }
+	    std::cout << "};\n";
+	    for (auto &a : domino_map) {
+                std::cout << "int " << a.second << ";" << std::endl;
+            }
+            std::cout << "void func(struct Packet p)" << fin_node << std::endl;
         }
     }
     return true;
