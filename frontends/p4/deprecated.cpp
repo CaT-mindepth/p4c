@@ -167,6 +167,8 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
     std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
         if (action->body->components[i]->getNode()->node_type_name() == "BlockStatement") {
+	    std::cout << "This is an atomic construct" << std::endl;
+	}
             CheckGetMember chgm(this->refMap); 
             IR::Node *copy_node = action->body->components[i]->getNode()->clone();
             auto mid_node = copy_node->apply(chgm);
@@ -187,8 +189,7 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
 	    for (auto &a : domino_map) {
                 std::cout << "int " << a.second << ";" << std::endl;
             }
-            std::cout << "void func(struct Packet p)" << fin_node << std::endl;
-        }
+            std::cout << "void func(struct Packet pkt) {\n" << fin_node << "}\n" << std::endl;
     }
     return true;
 }
