@@ -188,15 +188,15 @@ def output_relationship(tableA, tableB, TableDict, ActionDict):
     match_fields_tableB = TableDict[tableB][0]
     # Match dependency: Table A modifies a field Table B matches
     if overlap(modify_fields_tableA, match_fields_tableB):
-        print(tableA, "has Match dependency relationship with", tableB)
+        print("Match", tableA, tableB)
     # Action dependency: Table A and B both change the same field, but the end-result should be that of the later Table B
     elif overlap(modify_fields_tableA, modify_fields_tableB + read_fields_tableB) or overlap(read_fields_tableA, modify_fields_tableB):
-        print(tableA, "has Action dependency relationship with", tableB)
+        print("Action", tableA, tableB)
     # Reverse dependency: Table A matches on a field that Table B modifies,
     elif overlap(match_fields_tableA, modify_fields_tableB):
-        print(tableA, "has Reverse dependency relationship with", tableB)
-    else:
-        print(tableA, "has no dependency relationship with", tableB)
+        print("Reverse", tableA, tableB)
+    # else:
+        # print(tableA, "has no dependency relationship with", tableB)
 
 line_list = []
 
