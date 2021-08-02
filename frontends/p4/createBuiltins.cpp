@@ -128,7 +128,7 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         std::cout << "=====================Table Info========================" << std::endl;
     }
     std::cout << "table name is " << table->getName() << std::endl;
-    if (table->getKey()->keyElements.size() != 0) {
+    if (table->getKey() != nullptr) {
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
             std::cout << "no. " << (i + 1) << " key is " << table->getKey()->keyElements[i]->expression 
             << " with match type " << table->getKey()->keyElements[i]->matchType << std::endl;
