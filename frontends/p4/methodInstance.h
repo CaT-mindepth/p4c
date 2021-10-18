@@ -103,7 +103,7 @@ class ApplyMethod final : public MethodInstance {
             MethodInstance(expr, decl, applyObject->getApplyMethodType(),
                            applyObject->getApplyMethodType()),
             applyObject(applyObject)
-            { CHECK_NULL(applyObject); bindParameters(); }
+            { CHECK_NULL(applyObject); bindParameters();}
     friend class MethodInstance;
  public:
     const IR::IApply* applyObject;

@@ -16,6 +16,7 @@ class GetPktMember : public Transform {
             return true;
         }
         void print_vec() {
+	    // std::cout << "Enter print_vec\n";
             std::ofstream file_to_print;
             file_to_print.open("/tmp/example.txt", std::ofstream::app);
             file_to_print << "fields written within an Action:";
@@ -29,6 +30,7 @@ class GetPktMember : public Transform {
             }
             file_to_print << "\n---------\n";
             file_to_print.close();
+	    // std::cout << "Exit print_vec\n";
         }
         bool exist_dot(cstring s) {
             for (int i = 0; i < s.size(); i++) {
@@ -45,7 +47,7 @@ class GetPktMember : public Transform {
                                                                         return as;}
         const IR::Node* preorder(IR::Operation_Binary *expr) override {if (exist_dot(expr->left->toString()) and not_in_vec(expr->left->toString(), pkt_vec_write)) { pkt_vec_write.push_back(expr->left->toString());}
                                                                         if (exist_dot(expr->right->toString()) and not_in_vec(expr->right->toString(), pkt_vec_write)) { pkt_vec_write.push_back(expr->right->toString());}
-                                                                       std::cout << "000000000000000  expr = " << expr << std::endl;
+                                                                       // std::cout << "000000000000000  expr = " << expr << std::endl;
                                                                        return expr;};
         const IR::Node* preorder(IR::Member *mem) {// disregard read and write
                                                    if (mem->toString().find(".read") == nullptr and mem->toString().find(".write") == nullptr ) {
@@ -56,36 +58,62 @@ class GetPktMember : public Transform {
                                                    return mem;}
         const IR::Node* preorder(IR::Neg *expr) override {return expr;};
         const IR::Node* preorder(IR::Cmpl *expr) override {return expr;};
-        const IR::Node* preorder(IR::LNot *expr) override {std::cout << "LNot *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Mul *expr) override {std::cout << "Mul *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Div *expr) override {std::cout << "Div *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Mod *expr) override {std::cout << "Mod *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Add *expr) override {std::cout << "Add expr->left = " << expr->left << std::endl; 
-                                                          std::cout << "expr->right = " << expr->right << std::endl;
+        const IR::Node* preorder(IR::LNot *expr) override {// std::cout << "LNot *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Mul *expr) override {// std::cout << "Mul *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Div *expr) override {// std::cout << "Div *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Mod *expr) override {// std::cout << "Mod *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Add *expr) override {// std::cout << "Add expr->left = " << expr->left << std::endl; 
+                                                          //std::cout << "expr->right = " << expr->right << std::endl;
                                                           return expr;};
-        const IR::Node* preorder(IR::AddSat *expr) override {std::cout << "AddSat *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Sub *expr) override {std::cout << "Sub *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::SubSat *expr) override {std::cout << "SubSat *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Shl *expr) override {std::cout << "Shl *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Shr *expr) override {std::cout << "Shr *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::AddSat *expr) override {// std::cout << "AddSat *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Sub *expr) override {// std::cout << "Sub *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::SubSat *expr) override {// std::cout << "SubSat *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Shl *expr) override {// std::cout << "Shl *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Shr *expr) override {// std::cout << "Shr *expr = " << expr << std::endl; 
+		return expr;};
         const IR::Node* preorder(IR::Equ *expr) override {return expr;};
-        const IR::Node* preorder(IR::Neq *expr) override {std::cout << "Neq *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Lss *expr) override {std::cout << "Lss *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Leq *expr) override {std::cout << "Leq *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Grt *expr) override {std::cout << "Grt *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Geq *expr) override {std::cout << "Geq *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::BAnd *expr) override {std::cout << "BAnd *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::BOr *expr) override {std::cout << "BOr *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::BXor *expr) override {std::cout << "BXor *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::LAnd *expr) override {std::cout << "LAnd *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::LOr *expr) override {std::cout << "LOr *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Concat *expr) override {std::cout << "Concat *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Mask *expr) override {std::cout << "Mask *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Range *expr) override {std::cout << "Range *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::ArrayIndex *expr) override {std::cout << "ArrayIndex *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Slice *expr) override {std::cout << "Slice *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Mux *expr) override {std::cout << "Mux *expr = " << expr << std::endl; return expr;};
-        const IR::Node* preorder(IR::Cast *expr) override {std::cout << "Cast *expr = " << expr << std::endl; return expr;};
+        const IR::Node* preorder(IR::Neq *expr) override {// std::cout << "Neq *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Lss *expr) override {// std::cout << "Lss *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Leq *expr) override {//std::cout << "Leq *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Grt *expr) override {// std::cout << "Grt *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Geq *expr) override {// std::cout << "Geq *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::BAnd *expr) override {// std::cout << "BAnd *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::BOr *expr) override {// std::cout << "BOr *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::BXor *expr) override {//std::cout << "BXor *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::LAnd *expr) override {// std::cout << "LAnd *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::LOr *expr) override {// std::cout << "LOr *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Concat *expr) override {// std::cout << "Concat *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Mask *expr) override {// std::cout << "Mask *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Range *expr) override {// std::cout << "Range *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::ArrayIndex *expr) override {// std::cout << "ArrayIndex *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Slice *expr) override {// std::cout << "Slice *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Mux *expr) override {// std::cout << "Mux *expr = " << expr << std::endl; 
+		return expr;};
+        const IR::Node* preorder(IR::Cast *expr) override {// std::cout << "Cast *expr = " << expr << std::endl; 
+		return expr;};
 };
 
 const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
@@ -188,9 +216,11 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
         output_control = 1;
         std::cout << "=====================Control Block Info========================" << std::endl;
     }
+    std::cout << "prepare to output control\n";
     std::cout << "control block name is " << control->getName() << std::endl;
     std::cout << "control block body is " << control->body << std::endl;
     std::cout << "control->body->components.size() = " << control->body->components.size() << std::endl;
+    /*
     for (int i = 0; i < control->body->components.size(); i++) {
         std::cout << "control->body->components[i] = " << control->body->components[i] << std::endl;
         std::cout << "control->body->components[i]->getNode()->node_type_name() = " << control->body->components[i]->getNode()->node_type_name() << std::endl;
@@ -205,9 +235,11 @@ const IR::Node* DoInstantiateCalls::postorder(IR::P4Control* control) {
         }
     }
     std::cout << "\n";
+    */
     insert.append(control->controlLocals);
     control->controlLocals = insert;
     insert.clear();
+    std::cout << "Balabala\n";
     return control;
 }
 

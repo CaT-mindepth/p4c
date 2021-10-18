@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "frontends/common/resolveReferences/resolveReferences.h"
 #include "deprecated.h"
-
+#include <fstream>
 namespace P4 {
 
 class FinalCodeFormat : public Transform {
@@ -163,8 +163,16 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
         output_action = 1;
         std::cout << "=====================Action Info========================" << std::endl;
     }
-    std::cout << "Action name = " << action->getName() << std::endl;
-    std::cout << "Action body = " << action->body << std::endl;
+    if (action->getName() == "NoAction") {
+	return true;
+    }
+    std::ofstream myfile;
+    myfile.open("/tmp/" + action->getName() + ".txt");
+    std::ofstream myfile1;
+    myfile1.open("/tmp/program_info.txt", std::ios::app);
+    myfile1 << action->getName() << ":";
+    // std::cout << "Action name = " << action->getName() << std::endl;
+    // std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
         if (action->body->components[i]->getNode()->node_type_name() == "BlockStatement") {
 	    std::cout << "This is an atomic construct" << std::endl;
@@ -180,17 +188,27 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
             // std::cout << "=========================" << std::endl;
             // std::cout << "mid_node = " << mid_node << std::endl;
 	    // Output Domino program
+
 	    std::cout << "Domino program = \n";
+	    myfile << "struct Packet {\n";
 	    std::cout << "struct Packet {\n";
 	    for (auto &a : domino_pkt) {
+		myfile << "int " << a.first << ";\n";
+		myfile1 << a.first << " ";
 		std::cout << "int " << a.first << ";\n";
 	    }
+	    myfile1 << "\n";
+	    myfile << "};\n";
 	    std::cout << "};\n";
 	    for (auto &a : domino_map) {
+		myfile << "int " << a.second << ";\n";
                 std::cout << "int " << a.second << ";" << std::endl;
             }
+	    myfile << "void func(struct Packet pkt) {\n" << fin_node << "}\n";
             std::cout << "void func(struct Packet pkt) {\n" << fin_node << "}\n" << std::endl;
     }
+    myfile.close();
+    myfile1.close();
     return true;
 }
 

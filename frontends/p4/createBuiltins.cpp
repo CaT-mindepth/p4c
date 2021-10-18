@@ -13,13 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+#include <fstream>
+#include <iostream>
 #include "createBuiltins.h"
 #include "ir/ir.h"
 #include "frontends/p4/coreLibrary.h"
 
 namespace P4 {
-
+int pkt_count = 0;
+int table_count = 0;
 void CreateBuiltins::postorder(IR::Type_Header* type_header) {
     if (output_header_struct == 0) {
         output_header_struct = 1;
@@ -28,10 +30,20 @@ void CreateBuiltins::postorder(IR::Type_Header* type_header) {
     std::cout << "Header name is " << type_header->getName() << std::endl;
     std::cout << "Header size is " << type_header->width_bits() << std::endl;
     header_size_map[type_header->getName()] = type_header->width_bits(); 
+    std::ofstream myfile;
+    if (pkt_count == 0) {
+	myfile.open("/tmp/program_info.txt");
+	myfile << "--------------Output packet field Info:\n";
+	pkt_count = 1;
+    } else {
+	myfile.open("/tmp/program_info.txt", std::ios::app);
+    }
     for (int i = 0; i < type_header->fields.size(); i++) {
         std::cout << "member variable name: " << type_header->fields[i]->getName() << ", whose size is: " << type_header->fields[i]->type->to<IR::Type_Bits>()->size << " bits" << std::endl;
+	myfile << type_header->fields[i]->getName() << ":" << type_header->fields[i]->type->to<IR::Type_Bits>()->size / 8 << "B\n";
     }
     std::cout << std::endl;
+    myfile.close();
 }
 
 void CreateBuiltins::postorder(IR::Type_Struct* type_struct) {
@@ -90,12 +102,15 @@ void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
 }
 
 void CreateBuiltins::postorder(IR::Entry* entry) {
-  // std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
+  std::ofstream myfile("/tmp/program_info.txt", std::ios::app);
+  myfile << "entry:" << entry << "\n";
+  std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
   // convert a const table entry with action "a;" into "a();"
   if (entry->action->is<IR::PathExpression>())
     entry->action = new IR::MethodCallExpression(
       entry->action->srcInfo, entry->action,
       new IR::Vector<IR::Type>(), new IR::Vector<IR::Argument>());
+  myfile.close();
 }
 
 void CreateBuiltins::postorder(IR::ParserState* state) {
@@ -127,11 +142,22 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         output_table = 1;
         std::cout << "=====================Table Info========================" << std::endl;
     }
+    std::ofstream myfile("/tmp/program_info.txt", std::ios::app);
+    if (table_count == 0) {
+	table_count = 1;
+	myfile << "--------------Output Table Info:\n";
+    }
+    myfile << "table name:" << table->getName() << "\n";
     std::cout << "table name is " << table->getName() << std::endl;
     if (table->getKey() != nullptr) {
+	// For now only assume there is one match key
         for (int i = 0; i < table->getKey()->keyElements.size(); i++) {
+	    if (i == 0) {
+		myfile << "match key:";
+	    }
             std::cout << "no. " << (i + 1) << " key is " << table->getKey()->keyElements[i]->expression 
             << " with match type " << table->getKey()->keyElements[i]->matchType << std::endl;
+	    myfile << table->getKey()->keyElements[i]->expression << "\n";
         }
     } else 
         std::cout << "this table does not have match keys." << std::endl;
@@ -139,12 +165,13 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         std::cout << "table size is " << table->getSizeProperty() << std::endl;
     else 
         std::cout << "this table does not have size." << std::endl;
-    if (table->getActionList()->size() != 0) 
+    if (table->getActionList()->size() != 0) {
         std::cout << "table action list is " << table->getActionList() << std::endl;
-    else
+	myfile << "action:" << table->getActionList() << "\n";
+    } else
         std::cout << "this table does not have actions." << std::endl;
     std::cout << std::endl;
-
+    myfile.close();
     addNoAction = false;
     if (table->getDefaultAction() == nullptr)
         addNoAction = true;
