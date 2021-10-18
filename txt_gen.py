@@ -197,14 +197,42 @@ def main():
             # Add leading zero
             binary_par = binary_par.zfill(5)
             # TODO: fulfill the ALU_list
-            ALU_list = []
+            ALU_dic = {
+                    "pkt_1" : ["set", 1]
+                    }
+            op_to_code_dic = {
+                    "set" : "1110"
+                    }
             to_print_str = e + " " + binary_par + module_id[e] + "00001111" + "00000000"
             print(to_print_str)
             # 25bit * 25
             content_str = ""
+            ALU_dic_key = list(ALU_dic.keys())
+            Used_ALU_dic = {} # key: alu_num, val: field name
+            for e in ALU_dic_key:
+                byte_type = pkt_dic[e]
+                if byte_type == "4B":
+                    Used_ALU_dic[8 + 7 - key_pos_dic[e]] = e
+                elif byte_type == "2B":
+                    Used_ALU_dic[8*2 + 8 - key_pos_dic[e]] = e
+                else:
+                    assert byte_type == "6B"
+                    Used_ALU_dic[8 - key_pos_dic[e]] = e
+
             for i in range(25):
+                if i not in Used_ALU_dic:
+                    content_str += "1111000000000000000000000"
+                else:
+                    pkt_field = Used_ALU_dic[i]
+                    op = ALU_dic[pkt_field][0]
+                    imme = ALU_dic[pkt_field][1]
+                    content_str += op_to_code_dic[op]
+                    if op == "set":
+                        content_str += "00000"
+                    content_str += "{0:b}".format(imme).zfill(16)
+            content_str += "0000000"
+            print(content_str)
                 
-        # print(e)
 
 if __name__ == '__main__':
     main()
