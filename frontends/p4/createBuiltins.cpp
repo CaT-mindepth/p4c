@@ -167,7 +167,7 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         std::cout << "this table does not have size." << std::endl;
     if (table->getActionList()->size() != 0) {
         std::cout << "table action list is " << table->getActionList() << std::endl;
-	myfile << "action:" << table->getActionList() << "\n";
+	myfile << "action list:" << table->getActionList() << "\n";
     } else
         std::cout << "this table does not have actions." << std::endl;
     std::cout << std::endl;
