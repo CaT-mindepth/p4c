@@ -170,7 +170,7 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
     myfile.open("/tmp/" + action->getName() + ".txt");
     std::ofstream myfile1;
     myfile1.open("/tmp/program_info.txt", std::ios::app);
-    myfile1 << action->getName() << ":";
+    myfile1 << "Modified fields" << ":";
     // std::cout << "Action name = " << action->getName() << std::endl;
     // std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
