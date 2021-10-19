@@ -1,16 +1,19 @@
 #TODO: get all needed packet fields
 
 def main():
+    # key: int type, val: corresponding type ID
     type_id = {
             "2B" : "01",
             "4B" : "10",
             "6B" : "11"
             }
+    # key: int type, val: num of bytes
     bit_len_id = {
             "2B" : 2,
             "4B" : 4,
             "6B" : 6
             }
+    # key: module name, val: module ID
     module_id = {
             "Parser": "000",
             "Deparser": "101",
@@ -19,27 +22,99 @@ def main():
             "CAMConf": "010",
             "RAMConf": "010"
             }
-    #TODO: from ILP
-    allo_dict = {
-            "Parser": [0],
-            "Deparser": [0],
-            "KeyExtractConf": [0],
-            "CAMMaskConf": [0],
-            "CAMConf": [0],
-            "RAMConf": [0]
-            }
-    match_entry_val = {
-            "pkt_2" : 13
-            }
+
+    f = open("/tmp/allocation_info.txt", "r")
+    # key: module name, val: stage they are allocated to (From file ILP collected)
+    module_dic = {}
+    # key: fields modified, val: operation, fulfill the ALU_list (From file codegen)
+    ALU_dic = {}
+    while 1:
+        l = f.readline()
+        if not l:
+            break
+        if l == "Module allocation:\n":
+            idx = 0
+        elif l == "ALU content:\n":
+            idx = 1
+        else:
+            l = l[:-1]
+            key = l.split(':')[0]
+            # print("key = ", key)
+            if idx == 0:
+                # print("l.split(':')[1][0] = ",l.split(':')[1])
+                module_dic[key] = int(l.split(':')[1])
+            else:
+                assert idx == 1
+                ALU_dic[key] = []
+                for e in l.split(':')[1].split(' '):
+                    ALU_dic[key].append(e)
+    f.close()
+    # record all packet fields modified or matched (From file p4c)
+    used_pkt = ['pkt_1','pkt_2']
+    f = open("/tmp/program_info.txt", "r")
+    used_pkt = []
+    while 1:
+        l = f.readline()
+        if not l:
+            break
+        elif l.find("Modified fields:") != -1:
+            append_str = l.split(':')[1]
+            while append_str[-1] == ' ' or append_str[-1] == '\n' or append_str[-1] == ';':
+                append_str = append_str[:-1]
+            used_pkt.append(append_str)
+        elif l.find("match key:") != -1:
+            append_str = l.split(':')[1].split('.')[-1]
+            # remove redundant ';', ' ' or '\n'
+            while append_str[-1] == ' ' or append_str[-1] == '\n' or append_str[-1] == ';':
+                append_str = append_str[:-1]
+            used_pkt.append(append_str)
+    f.close()
+    # pkt_dic should read from file; key: name of a packet, val: how many bytes (From file collected)
+    pkt_dic = {}
+    f = open("/tmp/program_info.txt", "r")
+    while 1:
+        l = f.readline()
+        if not l or l == "--------------Output Table Info:\n":
+            break
+        elif l == "--------------Output packet field Info:\n":
+            continue
+        else:
+            l = l[:-1]
+            key = l.split(':')[0]
+            if key in used_pkt:
+                pkt_dic[key] = l.split(':')[1]
+    f.close()
+    # key: packet field name, val: match value (TODO: From file collected)
+    #match_entry_val = {
+    #        "pkt_2" : 13
+    #        }
+    match_entry_val = {}
+    f = open("/tmp/program_info.txt", "r")
+    while 1:
+        l = f.readline()
+        if not l:
+            break
+        elif l.find("entry:") != -1:
+            # Format: entry:{13};action_1();
+            val = int(l.split('{')[1].split('}')[0])
+            match_entry_val[curr_key] = val
+        elif l.find("match key:") != -1:
+            curr_key = l.split(':')[1]
+            if curr_key.find('.') != -1:
+                curr_key = curr_key.split('.')[-1]
+            while curr_key[-1] == ' ' or curr_key[-1] == '\n' or curr_key[-1] == ';':
+                curr_key = curr_key[:-1]
+    f.close()
+    # print(match_entry_val)
     l = ["Parser", "KeyExtractConf", "CAMMaskConf", "CAMConf", "RAMConf"]
     for e in l:
         if e == "Parser":
-            stage = allo_dict[e][0]
+            stage = module_dic[e]
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
             
-            stage = allo_dict["Deparser"][0]
+            stage = module_dic["Deparser"]
             binary_depar = "{0:b}".format(stage)
             binary_depar = binary_depar.zfill(5)
 
@@ -47,11 +122,6 @@ def main():
                     binary_depar + module_id["Deparser"] + "0000000000000001"
             print(to_print_str)
             # [000 + 7bit + 2bit + 3bit + 1bit] * 10
-            # TODO pkt_dic should read from file; key: name of a packet, val: how many bytes
-            pkt_dic = {
-                    "pkt_1" : "4B",
-                    "pkt_2" : "4B"
-                    }
             key_pos_dic = {}
             key_list = list(pkt_dic.keys())
             content_str = "";
@@ -84,7 +154,7 @@ def main():
                      content_str += tmp_str
             print(content_str)
         elif e == "KeyExtractConf":
-            stage = allo_dict[e][0]
+            stage = module_dic[e]
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
@@ -126,7 +196,7 @@ def main():
             content_str += "0011000000000000000000"
             print(content_str)
         elif e == "CAMMaskConf":
-            stage = allo_dict[e][0]
+            stage = module_dic[e]
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
@@ -157,7 +227,7 @@ def main():
             content_str += "10000000"
             print(content_str)
         elif e == "CAMConf":
-            stage = allo_dict[e][0]
+            stage = module_dic[e]
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
@@ -192,14 +262,11 @@ def main():
             print(content_str)
 
         elif e == "RAMConf":
-            stage = allo_dict[e][0]
+            stage = module_dic[e]
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
-            # TODO: fulfill the ALU_list
-            ALU_dic = {
-                    "pkt_1" : ["set", 1]
-                    }
+            # key: operation, val: corresponding ID
             op_to_code_dic = {
                     "set" : "1110"
                     }
@@ -225,7 +292,7 @@ def main():
                 else:
                     pkt_field = Used_ALU_dic[i]
                     op = ALU_dic[pkt_field][0]
-                    imme = ALU_dic[pkt_field][1]
+                    imme = int(ALU_dic[pkt_field][1])
                     content_str += op_to_code_dic[op]
                     if op == "set":
                         content_str += "00000"
