@@ -44,7 +44,7 @@ def get_path(direct_edge, start_node_list):
 def is_table_name(table_name):
     # Check whether this is a correct table name
     # TODO: think about better ways for such check.
-    op_list = ['+', '-', '*', '/', '>', '<', '!']
+    op_list = ['+', '-', '*', '/', '>', '<', '!', '(', ')', '=']
     for op in op_list:
         if op in table_name:
             return False
@@ -68,15 +68,17 @@ def parse_dot_file(input_file):
         # set up the node_map
         node = gv.get_node(item)
         table_name = G.nodes[item]['label']
-        assert is_table_name(table_name), "This node is not a valid table name"
+        if not is_table_name(table_name):
+            continue
+        assert is_table_name(table_name), "This node is not a valid table name" + table_name
         node_map[node] = table_name
         # add node into start_node_list
         start_node_list.append(item)
     for item in gv.edges():
         start_node = item[0]
         end_node = item[1]
-        if end_node in start_node_list:
-            start_node_list.remove(end_node)
+        # if end_node in start_node_list:
+        #    start_node_list.remove(end_node)
         # set the direct_edge first
         if start_node in direct_edge:
             direct_edge[start_node].append(end_node)
@@ -170,6 +172,8 @@ def output_relationship(tableA, tableB, TableDict, ActionDict):
     modify_fields_tableB = []
     read_fields_tableA = []
     read_fields_tableB = []
+    if tableA not in TableDict or tableB not in TableDict:
+        return
     for i in range(len(TableDict[tableA][1])):
         action_name = TableDict[tableA][1][i]
         for j in range(len(ActionDict[action_name][0])):
@@ -298,18 +302,18 @@ for i in range(len(line_list)):
          #print("field_list is empty")
      ActionDict[action_name] = [fields_written_list, fields_read_list]
 
-print("TableDict", TableDict)
-print("HeaderDict", HeaderDict)
-print("StructDict", StructDict)
-print("ActionDict", ActionDict)
+# print("TableDict", TableDict)
+# print("HeaderDict", HeaderDict)
+# print("StructDict", StructDict)
+# print("ActionDict", ActionDict)
 
 #TODO: get the correct input filename
-input_file = "/home/xiangyug/p4c/ingress.dot" 
+input_file = "/home/xiangyug/p4c/build/ingress.dot" 
 node_map, edge_map, direct_edge, path_list = parse_dot_file(input_file)
-print("node_map = ", node_map)
-print("edge_map = ", edge_map)
-print("direct_edge = ", direct_edge)
-print("path_list = ", path_list)
+print("node_map = ", node_map)   # It looks like the node_map is reasonable
+# print("edge_map = ", edge_map)
+# print("direct_edge = ", direct_edge)
+# print("path_list = ", path_list)
 
 print("-----------------------------------")
 # print("first of all, analyze the direct_edge")
@@ -317,9 +321,14 @@ print("-----------------------------------")
 successor_dep = []
 # Analyze the dependency of direct edge
 for key in direct_edge:
+    # Guarantee that the node is a table name
+    if not is_table_name(key) or key not in node_map:
+        continue
     for v in direct_edge[key]:
         # print("key = ", key)
         # print("v = ", v)
+        if not is_table_name(v) or v not in node_map:
+            continue
         tableA = node_map[key]
         tableB = node_map[v]
         # print("tableA = ", tableA)
@@ -327,8 +336,11 @@ for key in direct_edge:
         if tableA == '__START__' or tableB == "__EXIT__":
             continue
         # turn format from ingress.smac_vlan to smac_vlan
-        tableA = tableA.split('.')[1]
-        tableB = tableB.split('.')[1]
+        print("tableA = ", tableA)
+        if tableA.find('.') != -1:
+            tableA = tableA.split('.')[1]
+        if tableB.find('.') != -1:
+            tableB = tableB.split('.')[1]
         if edge_map[(key, v)] != 'none' and edge_map[(key, v)] != 'default':
             successor_dep.append(tuple({tableA, tableB}))
             print(tableA, "has Successor dependency relationship with", tableB)
@@ -337,8 +349,9 @@ for key in direct_edge:
             output_relationship(tableA, tableB, TableDict, ActionDict)
 
 # Anlyze the dependency of a path
+print("=====================================")
 for key in path_list:
-    if node_map[key] == '__START__':
+    if key not in node_map or node_map[key] == '__START__' or not is_table_name(node_map[key]):
         continue
     for v in path_list[key]:
         # print("key = ", key)
@@ -347,19 +360,35 @@ for key in path_list:
         # This case means that it has been already processed by direct_edge
         if key in direct_edge and v in direct_edge[key]:
             continue
-        if node_map[v] == "__EXIT__":
+        # print("v =", v)
+        # print("node_map[v] =", node_map[v])
+        if v not in node_map or not is_table_name(node_map[v]) or node_map[v] == "__EXIT__":
             continue
         path_table = shortest_path(key, v, direct_edge)
-        # print("path_table =", path_table)
         flag = 0
         # prove the correctness of Algo: if step 1 path does not have Successor dependency
-        # then there must be no dependency
-        tableA = node_map[path_table[0]].split('.')[1]
-        tableB = node_map[path_table[1]].split('.')[1]
+        # then there must be no Sucessor dependency
+        if path_table[0] not in node_map or path_table[1] not in node_map:
+            continue
+        if node_map[path_table[0]].find('.') != -1:
+            tableA = node_map[path_table[0]].split('.')[1]
+        else:
+            tableA = node_map[path_table[0]]
+        if node_map[path_table[1]].find('.') != -1:
+            print("node_map[path_table[1]] =", node_map[path_table[1]])
+            tableB = node_map[path_table[1]].split('.')[1]
+        else:
+            tableB = node_map[path_table[1]]
         if tuple({tableA, tableB}) in successor_dep:
             flag = 1
-        tableA = node_map[key].split('.')[1]
-        tableB = node_map[v].split('.')[1]
+        if node_map[key].find('.') != -1:
+            tableA = node_map[key].split('.')[1]
+        else:
+            tableA = node_map[key]
+        if node_map[v].find('.') != -1:
+            tableB = node_map[v].split('.')[1]
+        else:
+            tableB = node_map[v]
         if flag == 1:
             print(tableA, "has Successor dependency relationship with", tableB)
         else:
