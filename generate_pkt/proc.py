@@ -19,25 +19,25 @@ import common_func.func as func
 
 ##
 parser = argparse.ArgumentParser(description='convert from pcap to axi file or vince visa')
-parser.add_argument('--direction', type=int, default=0, choices=[0,1,2],
-                        help='0 for pcap to axi, 1 for axi to pcap')
-parser.add_argument('--confile', type=str, required=True)
-parser.add_argument('--outfile', type=str, required=True)
+parser.add_argument('--direction', type=str, default='conf_to_ctrl_pkt', 
+                        choices=['conf_to_ctrl_pkt','gen_data_pkt', 'pkt_to_conf'])
+parser.add_argument('--inputconf', type=str, required=True)
+parser.add_argument('--outputpkt', type=str, required=True)
 args = parser.parse_args()
 
 DATA_WIDTH=256
 
 def main():
-    if (args.direction == 0):
-        pkts = func.parse_configuration(args.confile)
+    if (args.direction == 'conf_to_ctrl_pkt'):
+        pkts = func.parse_configuration(args.inputconf)
 
         # pkt.tuser_dport = 4
         # wrpcap("input.pcap", pkts)
-        f = open(args.outfile, "w")
+        f = open(args.outputpkt, "w")
 
         axis_dump(pkts, f, DATA_WIDTH, 1e-9)
 
-    elif (args.direction == 1):
+    elif (args.direction == 'gen_data_pkt'):
         pkts = []
         pkt = func.gen_data_pkt("000d000000020000000400000000"+1440*"00", 1)
         pkts.append(pkt)
@@ -61,7 +61,7 @@ def main():
         # pkts.append(pkt)
 
 
-        f = open(args.outfile, "w")
+        f = open(args.outputpkt, "w")
 
         axis_dump(pkts, f, DATA_WIDTH, 1e-9)
     else :
