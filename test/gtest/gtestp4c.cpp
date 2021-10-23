@@ -20,6 +20,9 @@ limitations under the License.
 #include "helpers.h"
 #include "lib/log.h"
 
+extern const char* filename_test;
+const char* filename_test;
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     AutoCompileContext autoGTestContext(new GTestContext);

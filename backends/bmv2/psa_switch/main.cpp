@@ -36,6 +36,12 @@ limitations under the License.
 #include "ir/json_loader.h"
 #include "fstream"
 
+extern const char* pkt_field_table_info;
+extern const char* file_for_dep_info;
+
+const char* pkt_field_table_info;
+const char* file_for_dep_info;
+
 int main(int argc, char *const argv[]) {
     setup_gc_logging();
 

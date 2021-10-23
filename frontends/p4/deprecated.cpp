@@ -17,6 +17,7 @@ limitations under the License.
 #include "frontends/common/resolveReferences/resolveReferences.h"
 #include "deprecated.h"
 #include <fstream>
+
 namespace P4 {
 
 class FinalCodeFormat : public Transform {
@@ -168,9 +169,10 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
     }
     std::ofstream myfile;
     myfile.open("/tmp/" + action->getName() + ".txt");
-    std::ofstream myfile1;
-    myfile1.open("/tmp/program_info.txt", std::ios::app);
-    myfile1 << "Modified fields" << ":";
+    const char *pkt_field_table_info;
+    std::ofstream myfile_field_table_info;
+    myfile_field_table_info.open(pkt_field_table_info, std::ios::app);
+    myfile_field_table_info << "Modified fields" << ":";
     // std::cout << "Action name = " << action->getName() << std::endl;
     // std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
@@ -194,10 +196,10 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
 	    std::cout << "struct Packet {\n";
 	    for (auto &a : domino_pkt) {
 		myfile << "int " << a.first << ";\n";
-		myfile1 << a.first << " ";
+		myfile_field_table_info << a.first << " ";
 		std::cout << "int " << a.first << ";\n";
 	    }
-	    myfile1 << "\n";
+	    myfile_field_table_info << "\n";
 	    myfile << "};\n";
 	    std::cout << "};\n";
 	    for (auto &a : domino_map) {
@@ -208,7 +210,7 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
             std::cout << "void func(struct Packet pkt) {\n" << fin_node << "}\n" << std::endl;
     }
     myfile.close();
-    myfile1.close();
+    myfile_field_table_info.close();
     return true;
 }
 

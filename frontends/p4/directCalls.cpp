@@ -16,9 +16,10 @@ class GetPktMember : public Transform {
             return true;
         }
         void print_vec() {
+	    const char* file_for_dep_info;
 	    // std::cout << "Enter print_vec\n";
             std::ofstream file_to_print;
-            file_to_print.open("/tmp/example.txt", std::ofstream::app);
+            file_to_print.open(file_for_dep_info, std::ofstream::app);
             file_to_print << "fields written within an Action:";
             for (int i = 0; i < pkt_vec_write.size(); i++) {
                 file_to_print << pkt_vec_write[i] << ";";
@@ -117,12 +118,13 @@ class GetPktMember : public Transform {
 };
 
 const IR::Node* DoInstantiateCalls::preorder(IR::Type_Header* type_header) {
+    const char* file_for_dep_info;
     std::ofstream file_to_print;
     if (!output_file) {
         output_file = 1;
-        file_to_print.open("/tmp/example.txt");
+        file_to_print.open(file_for_dep_info);
     } else {
-        file_to_print.open("/tmp/example.txt", std::ofstream::app);
+        file_to_print.open(file_for_dep_info, std::ofstream::app);
     }
     file_to_print << "Header name = " << type_header->getName() << std::endl;
     file_to_print << "Header members:";
@@ -138,12 +140,13 @@ const IR::Node* DoInstantiateCalls::preorder(IR::Type_Struct* type_struct) {
     if (type_struct->getName() == cstring("standard_metadata_t")) {
         return type_struct;
     }
+    const char* file_for_dep_info;
     std::ofstream file_to_print;
     if (!output_file) {
         output_file = 1;
-        file_to_print.open("/tmp/example.txt");
+        file_to_print.open(file_for_dep_info);
     } else {
-        file_to_print.open("/tmp/example.txt", std::ofstream::app);
+        file_to_print.open(file_for_dep_info, std::ofstream::app);
     }
     file_to_print << "Struct name = " << type_struct->getName() << std::endl;
     file_to_print << "Struct members:";
@@ -158,12 +161,13 @@ const IR::Node* DoInstantiateCalls::preorder(IR::Type_Struct* type_struct) {
 
 const IR::Node* DoInstantiateCalls::preorder(IR::P4Table* table) {
     // Add table match into the tableInfo_map
+    const char* file_for_dep_info;
     std::ofstream file_to_print;
     if (!output_file) {
-        file_to_print.open("/tmp/example.txt");
+        file_to_print.open(file_for_dep_info);
         output_file = 1;
     } else {
-        file_to_print.open("/tmp/example.txt", std::ofstream::app);
+        file_to_print.open(file_for_dep_info, std::ofstream::app);
     }
     file_to_print << "Table name = " << table->getName() << std::endl;
     file_to_print << "Match portion:";
@@ -191,8 +195,9 @@ const IR::Node* DoInstantiateCalls::preorder(IR::P4Action* action) {
    if (action->getName() == "NoAction") {
        return action;
    }
+   const char* file_for_dep_info;
    std::ofstream file_to_print;
-   file_to_print.open("/tmp/example.txt", std::ofstream::app);
+   file_to_print.open(file_for_dep_info, std::ofstream::app);
    file_to_print << "Action name = " << action->getName() << std::endl;
    GetPktMember gpm;
    for (int i = 0; i < action->body->components.size(); i++) {

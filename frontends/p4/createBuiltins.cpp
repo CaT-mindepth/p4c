@@ -23,6 +23,7 @@ namespace P4 {
 int pkt_count = 0;
 int table_count = 0;
 void CreateBuiltins::postorder(IR::Type_Header* type_header) {
+    const char* pkt_field_table_info;
     if (output_header_struct == 0) {
         output_header_struct = 1;
         std::cout << "=====================Struct and Header Info========================" << std::endl;
@@ -32,11 +33,11 @@ void CreateBuiltins::postorder(IR::Type_Header* type_header) {
     header_size_map[type_header->getName()] = type_header->width_bits(); 
     std::ofstream myfile;
     if (pkt_count == 0) {
-	myfile.open("/tmp/program_info.txt");
+	myfile.open(pkt_field_table_info);
 	myfile << "--------------Output packet field Info:\n";
 	pkt_count = 1;
     } else {
-	myfile.open("/tmp/program_info.txt", std::ios::app);
+	myfile.open(pkt_field_table_info, std::ios::app);
     }
     for (int i = 0; i < type_header->fields.size(); i++) {
         std::cout << "member variable name: " << type_header->fields[i]->getName() << ", whose size is: " << type_header->fields[i]->type->to<IR::Type_Bits>()->size << " bits" << std::endl;
@@ -102,7 +103,8 @@ void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
 }
 
 void CreateBuiltins::postorder(IR::Entry* entry) {
-  std::ofstream myfile("/tmp/program_info.txt", std::ios::app);
+  const char* pkt_field_table_info;
+  std::ofstream myfile(pkt_field_table_info, std::ios::app);
   myfile << "entry:" << entry << "\n";
   std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
   // convert a const table entry with action "a;" into "a();"
@@ -142,7 +144,8 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         output_table = 1;
         std::cout << "=====================Table Info========================" << std::endl;
     }
-    std::ofstream myfile("/tmp/program_info.txt", std::ios::app);
+    const char* pkt_field_table_info;
+    std::ofstream myfile(pkt_field_table_info, std::ios::app);
     if (table_count == 0) {
 	table_count = 1;
 	myfile << "--------------Output Table Info:\n";

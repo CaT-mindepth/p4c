@@ -36,8 +36,12 @@ limitations under the License.
 #include "ir/json_loader.h"
 #include "fstream"
 
+extern const char* pkt_field_table_info;
+extern const char* file_for_dep_info;
+
+const char* pkt_field_table_info;
+const char* file_for_dep_info;
 int main(int argc, char *const argv[]) {
-    // std::cout << "hello argc = " << argc << std::endl;
     // for (int i = 0; i < argc; i++) {
     //     std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
     // }
@@ -72,8 +76,9 @@ int main(int argc, char *const argv[]) {
         // std::cout << "program = " << program << std::endl;
         try {
             P4::P4COptionPragmaParser optionsPragmaParser;
+	    std::cout << "Before apply" << std::endl;
             program->apply(P4::ApplyOptionsPragmas(optionsPragmaParser));
-            // std::cout << "program = " << program << std::endl;
+	    std::cout << "After apply" << std::endl;
             P4::FrontEnd frontend;
             frontend.addDebugHook(hook);
             program = frontend.run(options, program);

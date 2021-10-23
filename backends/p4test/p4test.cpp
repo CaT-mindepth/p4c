@@ -75,6 +75,12 @@ static void log_dump(const IR::Node *node, const char *head) {
             std::cout << *node << std::endl; }
 }
 
+extern const char* pkt_field_table_info;
+extern const char* file_for_dep_info;
+
+const char* pkt_field_table_info;
+const char* file_for_dep_info;
+
 int main(int argc, char *const argv[]) {
     setup_gc_logging();
     setup_signals();

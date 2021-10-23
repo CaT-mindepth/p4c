@@ -81,7 +81,23 @@ using GraphsContext = P4CContextWithOptions<Options>;
 
 }  // namespace graphs
 
+extern const char* pkt_field_table_info;
+extern const char* file_for_dep_info;
+
+const char* pkt_field_table_info;
+const char* file_for_dep_info;
+
 int main(int argc, char *const argv[]) {
+    // std::cout << "00000000000000\n";
+    if (argc != 4) {
+        std::cout << "Usage:" << argv[0] << " <P4 file> <file to collect p4 info> <file to collect table dep info>" << std::endl;
+        return 1;
+    }
+    pkt_field_table_info = argv[2];
+    std::cout << "pkt_field_table_info = " << pkt_field_table_info << std::endl;
+    file_for_dep_info = argv[3];
+    std::cout << "file_for_dep_info = " << file_for_dep_info << std::endl;
+    argc = 2;
     setup_gc_logging();
     setup_signals();
 
