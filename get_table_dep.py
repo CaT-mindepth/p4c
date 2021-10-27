@@ -2,6 +2,7 @@ import pygraphviz as pgv
 import networkx as nx
 import re
 import sys
+import os
 
 def get_path(direct_edge, start_node_list):
     # print("------------------------------")
@@ -314,7 +315,8 @@ def main(argv):
     # print("ActionDict", ActionDict)
     
     #TODO: get the correct input filename
-    input_file = "/home/xiangyug/p4c/build/ingress.dot" 
+    dirname = os.getcwd()
+    input_file = os.path.join(dirname, 'build/ingress.dot')
     node_map, edge_map, direct_edge, path_list = parse_dot_file(input_file)
     print("node_map = ", node_map)   # It looks like the node_map is reasonable
     # print("edge_map = ", edge_map)
