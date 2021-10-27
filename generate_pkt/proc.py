@@ -4,7 +4,7 @@ import socket, struct
 import random
 import argparse
 
-
+#TODO: get the path of NetFPGA-SUME-live
 scripts_path = "/home/xiangyug/NetFPGA-SUME-live/tools/scripts"
 nftest_path = "/home/xiangyug/NetFPGA-SUME-live/tools/scripts/NFTest/"
 sys.path.append(scripts_path)
@@ -12,7 +12,8 @@ sys.path.append(nftest_path)
 
 from axitools import *
 
-common_func_path = "/home/xiangyug/generate_pkt/common_func"
+dirname = os.getcwd()
+common_func_path = os.path.join(dirname, 'common_func')
 sys.path.append(common_func_path)
 import common_func.func as func
 
