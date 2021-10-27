@@ -1,6 +1,7 @@
 import pygraphviz as pgv
 import networkx as nx
 import re
+import sys
 
 def get_path(direct_edge, start_node_list):
     # print("------------------------------")
@@ -141,23 +142,6 @@ def shortest_path(key, v, direct_edge):
         path_list.append(item)
     return path_list
 
-TableDict = {} # key: table name; val: [match_fields list, action list]
-HeaderDict = {} # key: header name; val: list of members inside the header
-StructDict = {} # key: struct name; val: list of members inside a struct
-ActionDict = {} # key: action name; val: [list of fields written, list of fields read]
-
-f =  open("/tmp/example.txt", "r")
-# key is table name and value is a list of list including 
-# action list; match portion
-
-#Header name = hop_metadata_t
-#Header members:vrf;ipv6_prefix;next_hop_index;mcast_grp;urpf_fail;drop_reason; 
-
-#Struct name = headers
-#Struct members:
-
-# Successor dependency:Table A’s match result determines whether Table B should be executed or not
-
 # whether there is common member in both list1 and list2
 def overlap(list1, list2):
     for x in list1:
@@ -202,194 +186,219 @@ def output_relationship(tableA, tableB, TableDict, ActionDict):
     # else:
         # print(tableA, "has no dependency relationship with", tableB)
 
-line_list = []
 
-for x in f:
-  line_list.append(x)
-
-for i in range(len(line_list)):
-  x = line_list[i]
-  if x == "---------\n":
-     continue
-  elif x.find('Header name =') != -1:
-     if x[len(x) - 1] == '\n':
-         x = x[:len(x) - 2]
-     header_name = x.split(' = ')[1]
-     #print("header_name = ", header_name)
-     y = line_list[i + 1]
-     if y[len(y) - 1] == '\n':
-         y = y[:len(y) - 1]
-     if y[len(y) - 1] != ":":
-         header_member = y[:len(y)-1].split(":")[1].split(";")
-         #print("header_member", header_member)
-     else:
-         header_member = []
-         #print("header_member is empty")
-     HeaderDict[header_name] = header_member
-     i = i + 1
-  elif x.find("Struct name =") != -1:
-     if x[len(x) - 1] == '\n':
-         x = x[:len(x) - 2]
-     struct_name = x.split(' = ')[1]
-     #print("struct_name = ", struct_name)
-     y = line_list[i + 1]
-     if y[len(y) - 1] == '\n':
-         y = y[:len(y) - 1]
-     if y[len(y) - 1] != ":":
-         struct_member = y[:len(y)-1].split(":")[1].split(";")
-         #print("struct_member", struct_member)
-     else:
-         struct_member = []
-         #print("struct_member is empty")
-     StructDict[struct_name] = struct_member
-     i = i + 1
-  elif x.find("Table name =") != -1:
-     # Table name = smac_vlan
-     # Match portion:hdr.ethernet.srcAddr;standard_metadata.ingress_port;
-     # Action portion:
-     table_name = x.split(' = ')[1]
-     if table_name[len(table_name) - 1] == '\n':
-         table_name = table_name[:len(table_name) - 1]
-     #print("table_name = ", table_name)
-     match_portion = line_list[i + 1]
-     action_portion = line_list[i + 2]
-     i = i + 2
-     if match_portion[len(match_portion) - 1] == '\n':
-         match_portion = match_portion[:len(match_portion) - 1]
-     if match_portion[len(match_portion) - 1] != ":":
-         match_member = match_portion[:len(match_portion) - 1].split(":")[1].split(";")
-         #print("match_member = ", match_member)
-     else:
-         match_member = []
-         #print("match_member is empty")
-
-     if action_portion[len(action_portion) - 1] == '\n':
-         action_portion = action_portion[:len(action_portion) - 1]
-     if action_portion[len(action_portion) - 1] != ":":
-         action_member = action_portion[:len(action_portion) - 1].split(":")[1].split(";")
-         #print("action_member = ", action_member)
-     else:
-         action_member = []
-         #print("action_member is empty")
-
-     TableDict[table_name] = [match_member, action_member]
-  elif x.find("Action name =") != -1: 
-     # Action name = set_egress_port
-     # fields modified within an Action:standard_metadata.egress_spec;
-     action_name = x.split(" = ")[1]
-     if action_name[len(action_name) - 1] == '\n':
-         action_name = action_name[:len(action_name) - 1]
-     #print("action_name = ", action_name)
-     fields_portion = line_list[i + 1]
-     if fields_portion[len(fields_portion) - 1] == '\n':
-         fields_portion = fields_portion[:len(fields_portion) - 1]
-     if fields_portion[len(fields_portion) - 1] != ":":
-         fields_written_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
-         #print("fields_list = ", fields_list)
-     else:
-         fields_written_list = []
-         #print("field_list is empty")
-     i = i + 1
-     # Consider the fields used as read
-     fields_portion = line_list[i + 1]
-     if fields_portion[len(fields_portion) - 1] == '\n':
-         fields_portion = fields_portion[:len(fields_portion) - 1]
-     if fields_portion[len(fields_portion) - 1] != ":":
-         fields_read_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
-         #print("fields_list = ", fields_list)
-     else:
-         fields_read_list = []
-         #print("field_list is empty")
-     ActionDict[action_name] = [fields_written_list, fields_read_list]
-
-# print("TableDict", TableDict)
-# print("HeaderDict", HeaderDict)
-# print("StructDict", StructDict)
-# print("ActionDict", ActionDict)
-
-#TODO: get the correct input filename
-input_file = "/home/xiangyug/p4c/build/ingress.dot" 
-node_map, edge_map, direct_edge, path_list = parse_dot_file(input_file)
-print("node_map = ", node_map)   # It looks like the node_map is reasonable
-# print("edge_map = ", edge_map)
-# print("direct_edge = ", direct_edge)
-# print("path_list = ", path_list)
-
-print("-----------------------------------")
-# print("first of all, analyze the direct_edge")
-
-successor_dep = []
-# Analyze the dependency of direct edge
-for key in direct_edge:
-    # Guarantee that the node is a table name
-    if not is_table_name(key) or key not in node_map:
-        continue
-    for v in direct_edge[key]:
-        # print("key = ", key)
-        # print("v = ", v)
-        if not is_table_name(v) or v not in node_map:
+def main(argv):
+    if len(argv) != 2:
+        print("Usage: python3 " + argv[0] + " <filename for program info>")
+        sys.exit(1)
+    TableDict = {} # key: table name; val: [match_fields list, action list]
+    HeaderDict = {} # key: header name; val: list of members inside the header
+    StructDict = {} # key: struct name; val: list of members inside a struct
+    ActionDict = {} # key: action name; val: [list of fields written, list of fields read]
+    example_filename = argv[1]
+    f =  open(example_filename, "r")
+    # key is table name and value is a list of list including
+    # action list; match portion
+    
+    #Header name = hop_metadata_t
+    #Header members:vrf;ipv6_prefix;next_hop_index;mcast_grp;urpf_fail;drop_reason;
+    
+    #Struct name = headers
+    #Struct members:
+    
+    # Successor dependency:Table A’s match result determines whether Table B should be executed or not
+    
+    line_list = []
+    
+    for x in f:
+      line_list.append(x)
+    
+    for i in range(len(line_list)):
+      x = line_list[i]
+      if x == "---------\n":
+         continue
+      elif x.find('Header name =') != -1:
+         if x[len(x) - 1] == '\n':
+             x = x[:len(x) - 2]
+         header_name = x.split(' = ')[1]
+         #print("header_name = ", header_name)
+         y = line_list[i + 1]
+         if y[len(y) - 1] == '\n':
+             y = y[:len(y) - 1]
+         if y[len(y) - 1] != ":":
+             header_member = y[:len(y)-1].split(":")[1].split(";")
+             #print("header_member", header_member)
+         else:
+             header_member = []
+             #print("header_member is empty")
+         HeaderDict[header_name] = header_member
+         i = i + 1
+      elif x.find("Struct name =") != -1:
+         if x[len(x) - 1] == '\n':
+             x = x[:len(x) - 2]
+         struct_name = x.split(' = ')[1]
+         #print("struct_name = ", struct_name)
+         y = line_list[i + 1]
+         if y[len(y) - 1] == '\n':
+             y = y[:len(y) - 1]
+         if y[len(y) - 1] != ":":
+             struct_member = y[:len(y)-1].split(":")[1].split(";")
+             #print("struct_member", struct_member)
+         else:
+             struct_member = []
+             #print("struct_member is empty")
+         StructDict[struct_name] = struct_member
+         i = i + 1
+      elif x.find("Table name =") != -1:
+         # Table name = smac_vlan
+         # Match portion:hdr.ethernet.srcAddr;standard_metadata.ingress_port;
+         # Action portion:
+         table_name = x.split(' = ')[1]
+         if table_name[len(table_name) - 1] == '\n':
+             table_name = table_name[:len(table_name) - 1]
+         #print("table_name = ", table_name)
+         match_portion = line_list[i + 1]
+         action_portion = line_list[i + 2]
+         i = i + 2
+         if match_portion[len(match_portion) - 1] == '\n':
+             match_portion = match_portion[:len(match_portion) - 1]
+         if match_portion[len(match_portion) - 1] != ":":
+             match_member = match_portion[:len(match_portion) - 1].split(":")[1].split(";")
+             #print("match_member = ", match_member)
+         else:
+             match_member = []
+             #print("match_member is empty")
+    
+         if action_portion[len(action_portion) - 1] == '\n':
+             action_portion = action_portion[:len(action_portion) - 1]
+         if action_portion[len(action_portion) - 1] != ":":
+             action_member = action_portion[:len(action_portion) - 1].split(":")[1].split(";")
+             #print("action_member = ", action_member)
+         else:
+             action_member = []
+             #print("action_member is empty")
+    
+         TableDict[table_name] = [match_member, action_member]
+      elif x.find("Action name =") != -1: 
+         # Action name = set_egress_port
+         # fields modified within an Action:standard_metadata.egress_spec;
+         action_name = x.split(" = ")[1]
+         if action_name[len(action_name) - 1] == '\n':
+             action_name = action_name[:len(action_name) - 1]
+         #print("action_name = ", action_name)
+         fields_portion = line_list[i + 1]
+         if fields_portion[len(fields_portion) - 1] == '\n':
+             fields_portion = fields_portion[:len(fields_portion) - 1]
+         if fields_portion[len(fields_portion) - 1] != ":":
+             fields_written_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
+             #print("fields_list = ", fields_list)
+         else:
+             fields_written_list = []
+             #print("field_list is empty")
+         i = i + 1
+         # Consider the fields used as read
+         fields_portion = line_list[i + 1]
+         if fields_portion[len(fields_portion) - 1] == '\n':
+             fields_portion = fields_portion[:len(fields_portion) - 1]
+         if fields_portion[len(fields_portion) - 1] != ":":
+             fields_read_list = fields_portion[:len(fields_portion) - 1].split(":")[1].split(";")
+             #print("fields_list = ", fields_list)
+         else:
+             fields_read_list = []
+             #print("field_list is empty")
+         ActionDict[action_name] = [fields_written_list, fields_read_list]
+    
+    # print("TableDict", TableDict)
+    # print("HeaderDict", HeaderDict)
+    # print("StructDict", StructDict)
+    # print("ActionDict", ActionDict)
+    
+    #TODO: get the correct input filename
+    input_file = "/home/xiangyug/p4c/build/ingress.dot" 
+    node_map, edge_map, direct_edge, path_list = parse_dot_file(input_file)
+    print("node_map = ", node_map)   # It looks like the node_map is reasonable
+    # print("edge_map = ", edge_map)
+    # print("direct_edge = ", direct_edge)
+    # print("path_list = ", path_list)
+    
+    print("-----------------------------------")
+    # print("first of all, analyze the direct_edge")
+    
+    successor_dep = []
+    # Analyze the dependency of direct edge
+    for key in direct_edge:
+        # Guarantee that the node is a table name
+        if not is_table_name(key) or key not in node_map:
             continue
-        tableA = node_map[key]
-        tableB = node_map[v]
-        # print("tableA = ", tableA)
-        # print("tableB = ", tableB)
-        if tableA == '__START__' or tableB == "__EXIT__":
-            continue
-        # turn format from ingress.smac_vlan to smac_vlan
-        print("tableA = ", tableA)
-        if tableA.find('.') != -1:
-            tableA = tableA.split('.')[1]
-        if tableB.find('.') != -1:
-            tableB = tableB.split('.')[1]
-        if edge_map[(key, v)] != 'none' and edge_map[(key, v)] != 'default':
-            successor_dep.append(tuple({tableA, tableB}))
-            print(tableA, "has Successor dependency relationship with", tableB)
-        else:
-        # turn format from ingress.smac_vlan to smac_vlan
-            output_relationship(tableA, tableB, TableDict, ActionDict)
-
-# Anlyze the dependency of a path
-print("=====================================")
-for key in path_list:
-    if key not in node_map or node_map[key] == '__START__' or not is_table_name(node_map[key]):
-        continue
-    for v in path_list[key]:
-        # print("key = ", key)
-        # print("node_map[v] = ", node_map[v])
-
-        # This case means that it has been already processed by direct_edge
-        if key in direct_edge and v in direct_edge[key]:
-            continue
-        # print("v =", v)
-        # print("node_map[v] =", node_map[v])
-        if v not in node_map or not is_table_name(node_map[v]) or node_map[v] == "__EXIT__":
-            continue
-        path_table = shortest_path(key, v, direct_edge)
-        flag = 0
-        # prove the correctness of Algo: if step 1 path does not have Successor dependency
-        # then there must be no Sucessor dependency
-        if path_table[0] not in node_map or path_table[1] not in node_map:
-            continue
-        if node_map[path_table[0]].find('.') != -1:
-            tableA = node_map[path_table[0]].split('.')[1]
-        else:
-            tableA = node_map[path_table[0]]
-        if node_map[path_table[1]].find('.') != -1:
-            print("node_map[path_table[1]] =", node_map[path_table[1]])
-            tableB = node_map[path_table[1]].split('.')[1]
-        else:
-            tableB = node_map[path_table[1]]
-        if tuple({tableA, tableB}) in successor_dep:
-            flag = 1
-        if node_map[key].find('.') != -1:
-            tableA = node_map[key].split('.')[1]
-        else:
+        for v in direct_edge[key]:
+            # print("key = ", key)
+            # print("v = ", v)
+            if not is_table_name(v) or v not in node_map:
+                continue
             tableA = node_map[key]
-        if node_map[v].find('.') != -1:
-            tableB = node_map[v].split('.')[1]
-        else:
             tableB = node_map[v]
-        if flag == 1:
-            print(tableA, "has Successor dependency relationship with", tableB)
-        else:
-            output_relationship(tableA, tableB, TableDict, ActionDict)
+            # print("tableA = ", tableA)
+            # print("tableB = ", tableB)
+            if tableA == '__START__' or tableB == "__EXIT__":
+                continue
+            # turn format from ingress.smac_vlan to smac_vlan
+            print("tableA = ", tableA)
+            if tableA.find('.') != -1:
+                tableA = tableA.split('.')[1]
+            if tableB.find('.') != -1:
+                tableB = tableB.split('.')[1]
+            if edge_map[(key, v)] != 'none' and edge_map[(key, v)] != 'default':
+                successor_dep.append(tuple({tableA, tableB}))
+                print(tableA, "has Successor dependency relationship with", tableB)
+            else:
+            # turn format from ingress.smac_vlan to smac_vlan
+                output_relationship(tableA, tableB, TableDict, ActionDict)
+    
+    # Anlyze the dependency of a path
+    print("=====================================")
+    for key in path_list:
+        if key not in node_map or node_map[key] == '__START__' or not is_table_name(node_map[key]):
+            continue
+        for v in path_list[key]:
+            # print("key = ", key)
+            # print("node_map[v] = ", node_map[v])
+    
+            # This case means that it has been already processed by direct_edge
+            if key in direct_edge and v in direct_edge[key]:
+                continue
+            # print("v =", v)
+            # print("node_map[v] =", node_map[v])
+            if v not in node_map or not is_table_name(node_map[v]) or node_map[v] == "__EXIT__":
+                continue
+            path_table = shortest_path(key, v, direct_edge)
+            flag = 0
+            # prove the correctness of Algo: if step 1 path does not have Successor dependency
+            # then there must be no Sucessor dependency
+            if path_table[0] not in node_map or path_table[1] not in node_map:
+                continue
+            if node_map[path_table[0]].find('.') != -1:
+                tableA = node_map[path_table[0]].split('.')[1]
+            else:
+                tableA = node_map[path_table[0]]
+            if node_map[path_table[1]].find('.') != -1:
+                print("node_map[path_table[1]] =", node_map[path_table[1]])
+                tableB = node_map[path_table[1]].split('.')[1]
+            else:
+                tableB = node_map[path_table[1]]
+            if tuple({tableA, tableB}) in successor_dep:
+                flag = 1
+            if node_map[key].find('.') != -1:
+                tableA = node_map[key].split('.')[1]
+            else:
+                tableA = node_map[key]
+            if node_map[v].find('.') != -1:
+                tableB = node_map[v].split('.')[1]
+            else:
+                tableB = node_map[v]
+            if flag == 1:
+                print(tableA, "has Successor dependency relationship with", tableB)
+            else:
+                output_relationship(tableA, tableB, TableDict, ActionDict)
+
+if __name__ == "__main__":
+    main(sys.argv)
