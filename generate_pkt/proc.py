@@ -21,7 +21,7 @@ import common_func.func as func
 parser = argparse.ArgumentParser(description='convert from pcap to axi file or vince visa')
 parser.add_argument('--direction', type=str, default='conf_to_ctrl_pkt', 
                         choices=['conf_to_ctrl_pkt','gen_data_pkt', 'pkt_to_conf'])
-parser.add_argument('--inputconf', type=str, required=True)
+parser.add_argument('--inputconf', type=str)
 parser.add_argument('--outputpkt', type=str, required=True)
 args = parser.parse_args()
 
@@ -29,6 +29,9 @@ DATA_WIDTH=256
 
 def main():
     if (args.direction == 'conf_to_ctrl_pkt'):
+        if args.inputconf == None:
+            print("Error: missing --inputconf")
+            sys.exit(1)
         pkts = func.parse_configuration(args.inputconf)
 
         # pkt.tuser_dport = 4
