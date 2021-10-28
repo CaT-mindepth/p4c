@@ -18,8 +18,8 @@ limitations under the License.
 #include "deprecated.h"
 #include <fstream>
 
+extern const char *pkt_field_table_info;
 namespace P4 {
-
 class FinalCodeFormat : public Transform {
     public:
         const IR::Node* preorder(IR::MethodCallStatement *mcs) override {return nullptr;};
@@ -169,7 +169,6 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
     }
     std::ofstream myfile;
     myfile.open("/tmp/" + action->getName() + ".txt");
-    const char *pkt_field_table_info;
     std::ofstream myfile_field_table_info;
     myfile_field_table_info.open(pkt_field_table_info, std::ios::app);
     myfile_field_table_info << "Modified fields" << ":";

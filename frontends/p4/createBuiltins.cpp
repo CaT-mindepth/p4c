@@ -19,11 +19,11 @@ limitations under the License.
 #include "ir/ir.h"
 #include "frontends/p4/coreLibrary.h"
 
+extern const char* pkt_field_table_info;
 namespace P4 {
 int pkt_count = 0;
 int table_count = 0;
 void CreateBuiltins::postorder(IR::Type_Header* type_header) {
-    const char* pkt_field_table_info;
     if (output_header_struct == 0) {
         output_header_struct = 1;
         std::cout << "=====================Struct and Header Info========================" << std::endl;
@@ -103,7 +103,6 @@ void CreateBuiltins::postorder(IR::ExpressionValue* expression) {
 }
 
 void CreateBuiltins::postorder(IR::Entry* entry) {
-  const char* pkt_field_table_info;
   std::ofstream myfile(pkt_field_table_info, std::ios::app);
   myfile << "entry:" << entry << "\n";
   std::cout << "CreateBuiltins::postorder(IR::Entry* entry = " << entry << std::endl;
@@ -144,7 +143,6 @@ bool CreateBuiltins::preorder(IR::P4Table* table) {
         output_table = 1;
         std::cout << "=====================Table Info========================" << std::endl;
     }
-    const char* pkt_field_table_info;
     std::ofstream myfile(pkt_field_table_info, std::ios::app);
     if (table_count == 0) {
 	table_count = 1;

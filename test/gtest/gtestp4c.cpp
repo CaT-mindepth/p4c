@@ -20,8 +20,11 @@ limitations under the License.
 #include "helpers.h"
 #include "lib/log.h"
 
-extern const char* filename_test;
-const char* filename_test;
+extern const char* pkt_field_table_info;
+extern const char* file_for_dep_info;
+
+const char* pkt_field_table_info;
+const char* file_for_dep_info;
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
