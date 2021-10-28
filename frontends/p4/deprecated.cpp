@@ -168,10 +168,10 @@ bool CheckDeprecated::preorder(const IR::P4Action* action) {
 	return true;
     }
     std::ofstream myfile;
-    myfile.open("/tmp/" + action->getName() + ".txt");
+    myfile.open("/tmp/" + action->getName() + ".c");
     std::ofstream myfile_field_table_info;
     myfile_field_table_info.open(pkt_field_table_info, std::ios::app);
-    myfile_field_table_info << "Modified fields" << ":";
+    myfile_field_table_info << action->getName() << " Modified fields" << ":";
     // std::cout << "Action name = " << action->getName() << std::endl;
     // std::cout << "Action body = " << action->body << std::endl;
     for (int i = 0; i < action->body->components.size(); i++) { 
