@@ -26,8 +26,8 @@ def main(argv):
             "CAMConf": "010",
             "RAMConf": "010"
             }
-
-    f = open("/tmp/allocation_info.txt", "r")
+    allocation_info_filename = argv[1]
+    f = open(allocation_info_filename, "r")
     # key: module name, val: stage they are allocated to (From file ILP collected)
     module_dic = {}
     # key: fields modified, val: operation, fulfill the ALU_list (From file codegen)
@@ -54,29 +54,35 @@ def main(argv):
                     ALU_dic[key].append(e)
     f.close()
     # record all packet fields modified or matched (From file p4c)
-    used_pkt = ['pkt_1','pkt_2']
-    f = open("/tmp/program_info.txt", "r")
+    program_info_filename = argv[2]
+    f = open(program_info_filename, "r")
     used_pkt = []
+    action_field_dic = {} # key: action name, val: fields modified in this action
     while 1:
         l = f.readline()
         if not l:
             break
         elif l.find("Modified fields:") != -1:
+            action_name = l.split(' ')[0]
             append_str = l.split(':')[1]
             while append_str[-1] == ' ' or append_str[-1] == '\n' or append_str[-1] == ';':
                 append_str = append_str[:-1]
-            used_pkt.append(append_str)
+            if append_str not in used_pkt:
+                used_pkt.append(append_str)
+            action_field_dic[action_name] = append_str
         elif l.find("match key:") != -1:
             append_str = l.split(':')[1].split('.')[-1]
             # remove redundant ';', ' ' or '\n'
             while append_str[-1] == ' ' or append_str[-1] == '\n' or append_str[-1] == ';':
                 append_str = append_str[:-1]
-            used_pkt.append(append_str)
+            if append_str not in used_pkt:
+                used_pkt.append(append_str)
+    print(action_field_dic)
     f.close()
     print("used_pkt =", used_pkt)
     # pkt_dic should read from file; key: name of a packet, val: how many bytes (From file collected)
     pkt_dic = {}
-    f = open("/tmp/program_info.txt", "r")
+    f = open(program_info_filename, "r")
     while 1:
         l = f.readline()
         if not l or l == "--------------Output Table Info:\n":
@@ -94,7 +100,7 @@ def main(argv):
     #        "pkt_2" : 13
     #        }
     match_entry_val = {}
-    f = open("/tmp/program_info.txt", "r")
+    f = open(program_info_filename, "r")
     while 1:
         l = f.readline()
         if not l:
