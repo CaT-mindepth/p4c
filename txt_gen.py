@@ -1,6 +1,10 @@
-#TODO: get all needed packet fields
+import sys
 
-def main():
+
+def main(argv):
+    if len(argv) != 3:
+        print("Usage: python3 " + argv[0] + " <allocation_info (e.g., /tmp/allocation_info.txt)> <program_info (e.g., /tmp/program_info.txt)>")
+        sys.exit(1)
     # key: int type, val: corresponding type ID
     type_id = {
             "2B" : "01",
@@ -69,6 +73,7 @@ def main():
                 append_str = append_str[:-1]
             used_pkt.append(append_str)
     f.close()
+    print("used_pkt =", used_pkt)
     # pkt_dic should read from file; key: name of a packet, val: how many bytes (From file collected)
     pkt_dic = {}
     f = open("/tmp/program_info.txt", "r")
@@ -302,4 +307,4 @@ def main():
                 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
