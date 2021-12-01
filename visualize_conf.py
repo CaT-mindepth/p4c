@@ -36,8 +36,8 @@ def parse_keyextract_content(content):
     op_4B_2 = content[9:12]
     op_2B_1 = content[12:15]
     op_2B_2 = content[15:18]
-    print('match_6B_1:', op_6B_1 != '000', 'match_6B_2:', op_6B_2 != '000', 'match_4B_1:', op_4B_1 != '000', 'match_4B_2:', op_4B_2 != '000',
-            'match_2B_1:', op_2B_1 != '000', 'match_2B_2:', op_2B_2 != '000')
+    print('6B_1 for ALU:', op_6B_1 != '000', '6B_2 for ALU:', op_6B_2 != '000', '4B_1 for ALU:', op_4B_1 != '000', '4B_2 for ALU:', op_4B_2 != '000',
+            '2B_1 for ALU:', op_2B_1 != '000', '2B_2 for ALU:', op_2B_2 != '000')
     return
 
 '''16-bit * 10
@@ -101,10 +101,11 @@ def parse_ram_content(content):
             continue
         opcode = opcode_dir[ram_action[:4]]
         if opcode in operation_group_1:
-            '4b + 5b + 5b + 11b (reserve)'
-            operand1 = str_bit_to_decimal(ram_action[4:9])
+            '4b + 5b(type(2)+index(3)) + 5b + 11b (reserve)'
+            op_type = container_type_dic[ram_action[4:6]] 
+            operand1 = str_bit_to_decimal(ram_action[6:9])
             operand2 = str_bit_to_decimal(ram_action[9:14])
-            print('ALU index:', i, 'operation:', opcode, 'operand1:', operand1, 'operand2:', operand2)
+            print('ALU index:', i, 'operation:', opcode, 'op_type:', op_type, 'index:', operand1, 'operand2:', operand2)
         elif opcode in operation_group_2:
             '4b + 5b + 16b'
             operand1 = str_bit_to_decimal(ram_action[4:9])

@@ -62,6 +62,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         for i in range(1, int(alu_dic[t1]) + 1):
             for j in range(1, int(alu_dic[t2]) + 1):
                 action_dep_c.append((Int('%s_A_%s' % (t1, i)) < Int('%s_A_%s' % (t2, j))))
+    # TODO: check successor dep and reverse_dep
     successor_dep_c = []
     reverse_dep_c = []
 

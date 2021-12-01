@@ -58,6 +58,7 @@ def main(argv):
     f = open(program_info_filename, "r")
     used_pkt = []
     action_field_dic = {} # key: action name, val: fields modified in this action
+    match_keys = []
     while 1:
         l = f.readline()
         if not l:
@@ -75,6 +76,8 @@ def main(argv):
             # remove redundant ';', ' ' or '\n'
             while append_str[-1] == ' ' or append_str[-1] == '\n' or append_str[-1] == ';':
                 append_str = append_str[:-1]
+            if append_str not in match_keys:
+                match_keys.append(append_str)
             if append_str not in used_pkt:
                 used_pkt.append(append_str)
     print(action_field_dic)
@@ -169,7 +172,6 @@ def main(argv):
             binary_par = "{0:b}".format(stage)
             # Add leading zero
             binary_par = binary_par.zfill(5)
-            match_keys = ["pkt_2"]
             to_print_str = e + " " + binary_par + module_id[e] + "00000000" + "00000001"
             print(to_print_str)
             # 3 * 6 + 0011000000000000000000

@@ -6,7 +6,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
     z3_match_list = [Int('%s_M' % t) for t in table_list]
     z3_alu_list = [Int('%s_A_%s' % (t, i)) for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
 
-    total_stage = 4
+    total_stage = 12
     # z3_alu_loc_vec is a list of 0/1 which specifies which stage this ALU is at
     z3_alu_loc_vec = [[Int('%s_A_%s_stage_%s' % (t, i, k)) for k in range(total_stage)] for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
     z3_alu_loc_vec_transpose = [[z3_alu_loc_vec[i][j] for i in range(len(z3_alu_loc_vec))] for j in range(len(z3_alu_loc_vec[0]))]
@@ -25,7 +25,7 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
 
     # TODO: set the total number of available ALUs per stage to be a parameter
     # For now, we just assume the total available ALUs per stage is 2
-    avail_alu = 2
+    avail_alu = 200
 
     # Constraint 3: alu-level dependency
     alu_level_c = []
@@ -33,16 +33,13 @@ def gen_and_solve_ILP(match_dep, action_dep, successor_dep, reverse_dep, alu_dic
         for pair in alu_dep_dic[key]:
             alu_level_c.append(And(Int('%s_A_%s' % (key, pair[0])) < Int('%s_A_%s' % (key, pair[1]))))
 
-    print("z3_alu_list =", z3_alu_list)
-    print("z3_alu_loc_vec =", z3_alu_loc_vec)
     # Constraint 4: An ALU must be allocated to one and exactly one block
     alu_pos_rel_c = []
     for i in range(len(z3_alu_list)):
         for k in range(total_stage):
             alu_pos_rel_c.append(Implies(z3_alu_list[i] == k, z3_alu_loc_vec[i][k] == 1))
 
-    print("alu_pos_rel_c =", alu_pos_rel_c)
-    alu_pos_val_c = [And(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
+    alu_pos_val_c = [(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
     alu_row_sum_c = [Sum(z3_alu_loc_vec[i]) == 1 for i in range(len(z3_alu_loc_vec))]
     alu_col_sum_c = [Sum(z3_alu_loc_vec_transpose[i]) <= avail_alu for i in range(len(z3_alu_loc_vec_transpose))]
 
