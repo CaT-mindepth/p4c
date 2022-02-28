@@ -1,0 +1,18 @@
+{
+    "tables" : [
+        {
+            "name" : "table1",
+            "size" : 257,
+            "alu_num" : 2,
+            "alu_dep" : [[0,1]] 
+        }, 
+        {
+            "name" : "table2",
+            "size" : 257,
+            "alu_num" : 1,
+            "alu_dep" : []
+        }
+    ],
+    "table_dep" : [["table1", "table2"]]
+    
+}
