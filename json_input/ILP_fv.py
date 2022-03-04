@@ -6,9 +6,9 @@ import gurobipy as gp
 from gurobipy import GRB
 
 num_of_entries_per_table = 256
-num_of_alus_per_stage = 64
+num_of_alus_per_stage = 3
 num_of_table_per_stage = 8
-num_of_stages = 12
+num_of_stages = 4
 global_cnt = 0
 
 def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
@@ -57,15 +57,67 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     m.update()
 
     # Add alu-level dependency within an action
+    for table in alu_dep_dic:
+        num_of_match_components = table_match_dic[table]
+        for i in range(num_of_match_components):
+            for action in alu_dep_dic[table]:
+                for pair in alu_dep_dic[table][action]:
+                    alu1 = pair[0]
+                    alu2 = pair[1]
+                    alu1_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu1))
+                    alu2_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu2))
+                    m.addConstr(alu1_var <= alu2_var - 1)
 
     # Add table-level dependency
+    for pair in match_dep:
+        table1 = pair[0]
+        table2 = pair[1]
+        table1_size = table_match_dic[table1]
+        table2_size = table_match_dic[table2]
+        for i in range(table1_size):
+            for j in range(table2_size):
+                for table1_act in action_alu_dic[table1]:
+                    for table2_act in action_alu_dic[table2]:
+                        for table1_act_alu in action_alu_dic[table1][table1_act]:
+                            for table2_act_alu in action_alu_dic[table2][table2_act]:
+                                table1_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table1, i, table1_act, table1_act_alu))
+                                table2_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table2, j, table2_act, table2_act_alu))
+                                m.addConstr(table1_alu_var <= table2_alu_var - 1)
+    for pair in action_dep:
+        table1 = pair[0]
+        table2 = pair[1]
+        table1_size = table_match_dic[table1]
+        table2_size = table_match_dic[table2]
+        for i in range(table1_size):
+            for j in range(table2_size):
+                for table1_act in action_alu_dic[table1]:
+                    for table2_act in action_alu_dic[table2]:
+                        for table1_act_alu in action_alu_dic[table1][table1_act]:
+                            for table2_act_alu in action_alu_dic[table2][table2_act]:
+                                table1_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table1, i, table1_act, table1_act_alu))
+                                table2_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table2, j, table2_act, table2_act_alu))
+                                m.addConstr(table1_alu_var <= table2_alu_var - 1)
+
+    for pair in reverse_dep:
+        table1 = pair[0]
+        table2 = pair[1]
+        table1_size = table_match_dic[table1]
+        table2_size = table_match_dic[table2]
+        for i in range(table1_size):
+            for j in range(table2_size):
+                for table1_act in action_alu_dic[table1]:
+                    for table2_act in action_alu_dic[table2]:
+                        for table1_act_alu in action_alu_dic[table1][table1_act]:
+                            for table2_act_alu in action_alu_dic[table2][table2_act]:
+                                table1_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table1, i, table1_act, table1_act_alu))
+                                table2_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table2, j, table2_act, table2_act_alu))
+                                m.addConstr(table1_alu_var <= table2_alu_var)
 
     # All alus must be allocated to one and only one stage
     for alu_vec in alu_loc_var_vec:
         m.addConstr(sum(alu_vec) == 1)
 
-    # restrict the number of tables used within a stage should be smaller than or equal to number of tables per stage
-    
+    # restrict the number of tables used within a stage should be smaller than or equal to number of tables per stage    
     table_loc_var_vec = []
     for table in table_size_dic:
         num_of_match_components = table_match_dic[table]
@@ -94,6 +146,70 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     for i in range(len(table_loc_var_vec_transpose)):
         m.addConstr(sum(table_loc_var_vec_transpose[i]) <= num_of_table_per_stage)
 
+    # Use no more than available ALUs per stage
+    tmp_state_field_loc_vec = []
+    for tmp_field in tmp_fields_def:
+        m.addVar(name="%s_beg" % tmp_field)
+        m.addVar(name="%s_end" % tmp_field)
+        tmp_list = []
+        for i in range(num_of_stages):
+            tmp_list.append(m.addVar(name="%s_stage%s" % (tmp_field, i), vtype=GRB.BINARY))
+        tmp_state_field_loc_vec.append(tmp_list)
+    m.update()
+
+    for tmp_field in tmp_fields_def:
+        beg_var = m.getVarByName("%s_beg" % tmp_field)
+        end_var = m.getVarByName("%s_end" % tmp_field)
+        for mem in tmp_alu_dic[tmp_field]:
+            table = mem[0]
+            action = mem[1]
+            alu = mem[2]
+            for i in range(table_size_dic[table]):
+                alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
+                m.addConstr(beg_var <= alu_var)
+                m.addConstr(alu_var <= end_var)
+
+    for tmp_field in tmp_fields_def:
+        beg_var = m.getVarByName("%s_beg" % tmp_field)
+        end_var = m.getVarByName("%s_end" % tmp_field)
+        for i in range(num_of_stages):
+            global global_cnt
+            new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+            global_cnt += 1
+            stage_var = m.getVarByName("%s_stage%s" % (tmp_field, i))
+            m.addGenConstrIndicator(new_var, True, beg_var <= i)
+            m.addGenConstrIndicator(new_var, False, beg_var >= i + 1)
+            new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+            m.addGenConstrIndicator(new_var1, True, end_var >= i)
+            m.addGenConstrIndicator(new_var1, False, end_var <= i - 1)
+            m.addConstr(stage_var == new_var1 * new_var)
+
+
+    for state_var in stateful_var_def:
+        tmp_list = []
+        for i in range(num_of_stages):
+            tmp_list.append(m.addVar(name="%s_stage%s" % (state_var, i), vtype=GRB.BINARY))
+        tmp_state_field_loc_vec.append(tmp_list)
+    m.update()
+    for state_var in stateful_var_def:
+        for mem in state_alu_dic[state_var]:
+            table = mem[0]
+            action = mem[1]
+            alu = mem[2]
+            for i in range(table_size_dic[table]):
+                for j in range(num_of_stages):
+                    print("%s_M%s_%s_%s_stage%s" % (table, i, action, alu, j))
+                    print(("%s_stage%s" % (state_var, j)))
+                    alu_var = m.getVarByName("%s_M%s_%s_%s_stage%s" % (table, i, action, alu, j))
+                    state_var_stage = m.getVarByName("%s_stage%s" % (state_var, j))
+                    m.addConstr((alu_var == 1) >> (state_var_stage == 1))
+                    m.addConstr((alu_var == 0) >> (state_var_stage == 0))
+
+    m.update()
+
+    tmp_state_field_loc_vec_transpose = [[tmp_state_field_loc_vec[i][j] for i in range(len(tmp_state_field_loc_vec))] for j in range(len(tmp_state_field_loc_vec[0]))]
+    for i in range(len(tmp_state_field_loc_vec_transpose)):
+        m.addConstr(sum(tmp_state_field_loc_vec_transpose[i]) <= num_of_alus_per_stage - num_of_fields)
 
     '''Start solving the ILP optimization problem'''
     m.setObjective(cost, GRB.MINIMIZE)
@@ -114,19 +230,20 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
 def main(argv):
     # List all info needed for ILP
     pkt_fields_def = ['pkt_0', 'pkt_1'] # all packet fields in definition
-    tmp_fields_def = [] # all temporary variables
-    stateful_var_def = [] # all stateful variables
+    tmp_fields_def = ['tmp_0'] # all temporary variables
+    stateful_var_def = ['s0'] # all stateful variables
 
     table_act_dic = {'T1':['A1'], 'T2':['A1']} #key: table name, val: list of actions
     table_size_dic = {'T1':1, 'T2':1} #key: table name, val: table size
-    action_alu_dic = {'T1': {'A1' : ['ALU1']},
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4']},
                         'T2': {'A1' : ['ALU1']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
-    alu_dep_dic = {'T1': {'A1': []}, 'T2': {'A1': []}} #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
-    
-    pkt_alu_dic = {'pkt_0':[['T1','A1','ALU1']], 
-                    'pkt_1':[['T2','A1','ALU1']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
-    tmp_alu_dic = {} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
-    state_alu_dic = {} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
+    # alu_dep_dic = {'T1': {'A1': [['ALU1','ALU2']]}, 'T2': {'A1': []}} #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T1': {'A1': []}, 'T2': {'A1': []}}
+
+    pkt_alu_dic = {'pkt_0':[['T1','A1','ALU1'],['T2','A1','ALU1']], 
+                    'pkt_1':[['T1','A1','ALU2']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T1','A1','ALU3']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
+    state_alu_dic = {'s0':[['T1','A1','ALU4']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
     match_dep = [['T1', 'T2']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
