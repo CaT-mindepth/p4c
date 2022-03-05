@@ -1,0 +1,46 @@
+1. stateful_fw
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4']
+    tmp_fields_def = ['tmp_0','tmp1','tmp2','tmp3'] # all temporary variables
+    stateful_var_def = ['s0'] # all stateful variables
+
+    table_act_dic = {'T1':['A1']} #key: table name, val: list of actions
+    table_size_dic = {'T1':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4','ALU5','ALU6','ALU7']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
+    #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T1': {'A1': [['ALU2','ALU7'], ['ALU6','ALU3'], ['ALU6','ALU7']
+                                ['ALU3','ALU4'], ['ALU4','ALU5'], ['ALU7','ALU5']]}}
+
+    pkt_alu_dic = {'pkt_3':[['T1','A1','ALU1']], 
+                    'pkt_4':[['T1','A1','ALU5']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T1','A1','ALU2'],['T1','A1','ALU7']],
+                    'tmp1':[['T1','A1','ALU6'],['T1','A1','ALU3'],['T1','A1','ALU7']],
+                    'tmp2':[['T1','A1','ALU7'],['T1','A1','ALU5']],
+                    'tmp3':[['T1','A1','ALU4'],['T1','A1','ALU5']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
+    state_alu_dic = {'s0':[['T1','A1','ALU3']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
+    match_dep = [] #list of list, for each pari [T1, T2], T2 has match dependency on T1
+    action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
+Output:
+Optimal objective: 3
+T1_M0_A1_ALU1 -0
+T1_M0_A1_ALU2 -0
+T1_M0_A1_ALU3 1
+T1_M0_A1_ALU4 2
+T1_M0_A1_ALU5 3
+T1_M0_A1_ALU6 -0
+T1_M0_A1_ALU7 1
+T1_M0_stage0 1
+T1_M0_stage1 1
+T1_M0_stage2 1
+T1_M0_stage3 1
+T1_M0_stage4 0
+tmp_0_beg -0
+tmp_0_end 1
+tmp1_beg 0
+tmp1_end 1
+tmp2_beg 1
+tmp2_end 3
+tmp3_beg 2
+tmp3_end 3
+
+2. stateful_fw
