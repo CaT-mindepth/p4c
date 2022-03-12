@@ -8,13 +8,14 @@ from gurobipy import GRB
 num_of_entries_per_table = 256
 num_of_alus_per_stage = 64
 num_of_table_per_stage = 8
-num_of_stages = 5
-global_cnt = 0
+num_of_stages = 12
 
 def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, reverse_dep):
+    match_dep, action_dep, reverse_dep, opt = True):
+
+    global_cnt = 0
     num_of_fields = len(pkt_fields_def)
 
     m = gp.Model("ILP")
@@ -66,7 +67,7 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                     alu2 = pair[1]
                     alu1_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu1))
                     alu2_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu2))
-                    m.addConstr(alu1_var <= alu2_var - 1)
+                    m.addConstr(alu1_var <= alu2_var - 1) # alu1_var < alu2_var
 
     # Add table-level dependency
     for pair in match_dep:
@@ -149,8 +150,8 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     # Use no more than available ALUs per stage
     tmp_state_field_loc_vec = []
     for tmp_field in tmp_fields_def:
-        m.addVar(name="%s_beg" % tmp_field)
-        m.addVar(name="%s_end" % tmp_field)
+        m.addVar(name="%s_beg" % tmp_field) # Beg is the stage number it is written. It is unique because of SSA
+        m.addVar(name="%s_end" % tmp_field) # End is >= the stage number it is last read.
         tmp_list = []
         for i in range(num_of_stages):
             tmp_list.append(m.addVar(name="%s_stage%s" % (tmp_field, i), vtype=GRB.BINARY))
@@ -160,48 +161,91 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     for tmp_field in tmp_fields_def:
         beg_var = m.getVarByName("%s_beg" % tmp_field)
         end_var = m.getVarByName("%s_end" % tmp_field)
-        for mem in tmp_alu_dic[tmp_field]:
+        m.addConstr(beg_var >= 0)
+        m.addConstr(beg_var <= num_of_stages - 1)
+        m.addConstr(end_var >= 0)
+        m.addConstr(end_var <= num_of_stages - 1)
+        # m.addConstr(beg_var <= end_var - 1)
+        for j in range(len(tmp_alu_dic[tmp_field])):
+            mem = tmp_alu_dic[tmp_field][j]
             table = mem[0]
             action = mem[1]
             alu = mem[2]
-            for i in range(table_size_dic[table]):
-                alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
-                m.addConstr(beg_var <= alu_var)
-                m.addConstr(alu_var <= end_var)
+            if j == 0:
+                # the ALU that writes tmp fields
+                for i in range(table_size_dic[table]):
+                    alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
+                    m.addConstr(beg_var == alu_var)
+                    m.addConstr(beg_var + 1 <= end_var)
+            else:
+                # the ALUs that read tmp fields
+                for i in range(table_size_dic[table]):
+                    alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
+                    m.addConstr(alu_var <= end_var)
 
     for tmp_field in tmp_fields_def:
         beg_var = m.getVarByName("%s_beg" % tmp_field)
         end_var = m.getVarByName("%s_end" % tmp_field)
         for i in range(num_of_stages):
-            global global_cnt
-            new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
-            global_cnt += 1
+            # global global_cnt 
+            new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.BINARY)
+            # beg <= i < end -> allocate one alu for this tmp field
             stage_var = m.getVarByName("%s_stage%s" % (tmp_field, i))
             m.addGenConstrIndicator(new_var, True, beg_var <= i)
             m.addGenConstrIndicator(new_var, False, beg_var >= i + 1)
-            new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
-            m.addGenConstrIndicator(new_var1, True, end_var >= i - 1)
+            global_cnt += 1
+            new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.BINARY)
+            m.addGenConstrIndicator(new_var1, True, end_var >= i + 1)
             m.addGenConstrIndicator(new_var1, False, end_var <= i)
             m.addConstr(stage_var == new_var1 * new_var)
-
+            global_cnt += 1
 
     for state_var in stateful_var_def:
+        m.addVar(name="%s_beg" % state_var)
+        m.addVar(name="%s_end" % state_var)
         tmp_list = []
         for i in range(num_of_stages):
             tmp_list.append(m.addVar(name="%s_stage%s" % (state_var, i), vtype=GRB.BINARY))
         tmp_state_field_loc_vec.append(tmp_list)
     m.update()
     for state_var in stateful_var_def:
-        for mem in state_alu_dic[state_var]:
+        beg_var = m.getVarByName("%s_beg" % state_var) # Beg is the stage number for stateful ALU
+        end_var = m.getVarByName("%s_end" % state_var) # End is >= the stage number it is last read.
+        m.addConstr(beg_var >= 0)
+        m.addConstr(beg_var <= num_of_stages - 1)
+        m.addConstr(end_var >= 0)
+        m.addConstr(end_var <= num_of_stages - 1)
+
+        for j in range(len(state_alu_dic[state_var])):
+            mem = state_alu_dic[state_var][j]
             table = mem[0]
             action = mem[1]
             alu = mem[2]
-            for i in range(table_size_dic[table]):
-                for j in range(num_of_stages):
-                    alu_var = m.getVarByName("%s_M%s_%s_%s_stage%s" % (table, i, action, alu, j))
-                    state_var_stage = m.getVarByName("%s_stage%s" % (state_var, j))
-                    m.addConstr((alu_var == 1) >> (state_var_stage == 1))
-                    m.addConstr((alu_var == 0) >> (state_var_stage == 0))
+            if j == 0:
+                for i in range(table_size_dic[table]):
+                    alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
+                    m.addConstr(beg_var == alu_var)
+                    m.addConstr(beg_var + 1 <= end_var)
+            else:
+                for i in range(table_size_dic[table]):
+                    alu_var = m.getVarByName("%s_M%s_%s_%s" % (table, i, action, alu))
+                    m.addConstr(alu_var <= end_var)
+        
+        for state_var in stateful_var_def:
+            beg_var = m.getVarByName("%s_beg" % state_var)
+            end_var = m.getVarByName("%s_end" % state_var)
+            for i in range(num_of_stages):
+                # beg <= i < end -> allocate one alu for this stateful var
+                new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+                stage_var = m.getVarByName("%s_stage%s" % (state_var, i))
+                m.addGenConstrIndicator(new_var, True, beg_var <= i)
+                m.addGenConstrIndicator(new_var, False, beg_var >= i + 1)
+                global_cnt += 1
+                new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+                m.addGenConstrIndicator(new_var1, True, end_var >= i + 1)
+                m.addGenConstrIndicator(new_var1, False, end_var <= i)
+                m.addConstr(stage_var == new_var1 * new_var)
+                global_cnt += 1
 
     m.update()
 
@@ -210,7 +254,13 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
         m.addConstr(sum(tmp_state_field_loc_vec_transpose[i]) <= num_of_alus_per_stage - num_of_fields)
 
     '''Start solving the ILP optimization problem'''
-    m.setObjective(cost, GRB.MINIMIZE)
+    if opt == True:
+        m.setObjective(cost, GRB.MINIMIZE)
+        print("Solving optimization problem")
+    else:
+        m.setObjective(1, GRB.MINIMIZE)
+        print("Solving satisfiable problem")
+    
     m.optimize()
     if m.status == GRB.OPTIMAL: 
         print("Following is the result we want:*****************\n\n\n")   
@@ -235,7 +285,7 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             var_l.append(end_str)
         for v in m.getVars():
             # if v.varName != 'cost' and v.varName.find('stage') == -1:
-            if v.varName in var_l:
+            if v.varName in var_l or v.varName == 'cost':
                 print('%s %g' % (v.varName, v.x))
         print("************************************************")
     else:
@@ -244,6 +294,7 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
 
 def main(argv):
     # List all info needed for ILP
+    '''
     pkt_fields_def = ['pkt_0', 'pkt_1'] # all packet fields in definition
     tmp_fields_def = ['tmp_0'] # all temporary variables
     stateful_var_def = ['s0'] # all stateful variables
@@ -262,7 +313,7 @@ def main(argv):
     match_dep = [['T1', 'T2']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
-
+    '''
     '''*****************test case 1: stateful_fw*****************'''
     '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4']
@@ -286,10 +337,33 @@ def main(argv):
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
     '''
+    '''*****************test case 2: blue_increase*****************'''
+    
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2'] # all packet fields
+    tmp_fields_def = ['tmp_0'] # all temporary variables
+    stateful_var_def = ['s0','s1'] # all stateful variables
+
+    table_act_dic = {'T1':['A1']} # key: table name, val: list of actions
+    table_size_dic = {'T1':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
+    #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T1': {'A1': [['ALU1','ALU2'], ['ALU2','ALU3'], ['ALU3','ALU4']]}}
+
+    pkt_alu_dic = {'pkt_1':[['T1','A1','ALU1']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T1','A1','ALU3'],['T1','A1','ALU4']]
+                    } #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the first member is the ALU modifies tmp field and the others are ALUs that read from the tmp field
+    state_alu_dic = {'s0':[['T1','A1','ALU2'],['T1','A1','ALU3']],
+                    's1':[['T1','A1','ALU4']]} #key: packet field in def, val: a list of list of size 3, ['table name', 'action name', 'alu name'], the first member is the ALU modifies tmp field and the others are ALUs that read from the tmp field
+    match_dep = [] #list of list, for each pari [T1, T2], T2 has match dependency on T1
+    action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
+    
+
+    opt = True
     solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, reverse_dep)
+    match_dep, action_dep, reverse_dep, opt)
 
     # TODO: List all info needed for txt gen
     table_match_dic = {} #key: table name, val: list of packet fields for match
