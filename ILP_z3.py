@@ -4,7 +4,7 @@ from z3 import *
 import math
 
 num_of_entries_per_table = 256
-num_of_alus_per_stage = 5
+num_of_alus_per_stage = 64
 num_of_table_per_stage = 8
 num_of_stages = 5
 
@@ -15,19 +15,18 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         match_dep, action_dep, reverse_dep):
     # Get the place where we need to newly allocate the alus
     used_alu = len(pkt_fields_def)
-    tmp_alu = []
-    for tmp_field in tmp_fields_def:
-        curr_list = []
-        for i in range(num_of_stages):
-            curr_list.append(Int('%s_stage%s' % (tmp_field, i)))
-        tmp_alu.append(curr_list)
-    for state_var in stateful_var_def:
-        curr_list = []
-        for i in range(num_of_stages):
-            curr_list.append(Int('%s_stage%s' % (state_var, i)))
-        tmp_alu.append(curr_list)
-    print(tmp_alu)
-    sys.exit(0)
+    # tmp_alu = []
+    # for tmp_field in tmp_fields_def:
+    #     curr_list = []
+    #     for i in range(num_of_stages):
+    #         curr_list.append(Int('%s_stage%s' % (tmp_field, i)))
+    #     tmp_alu.append(curr_list)
+    # for state_var in stateful_var_def:
+    #     curr_list = []
+    #     for i in range(num_of_stages):
+    #         curr_list.append(Int('%s_stage%s' % (state_var, i)))
+    #     tmp_alu.append(curr_list)
+    # print(tmp_alu)
     # Get the match and alu list
     z3_match_list = [Int('%s_M%s' % (t, i)) for t in table_size_dic for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table))]
     z3_alu_list = [Int('%s_M%s_%s_%s' % (t, i, action, alu)) for t in table_size_dic for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table))
@@ -42,15 +41,28 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
                 curr_list.append(Int('%s_M%s_stage%s' % (t, i, j)))
         z3_table_loc_vec.append(curr_list)
-    # print(z3_table_loc_vec)
-    '''
-    # z3_alu_loc_vec is a list of 0/1 which specifies which stage this ALU is at
-    z3_alu_loc_vec = [[Int('%s_A_%s_stage_%s' % (t, i, k)) for k in range(total_stage)] for t in table_list for i in range(1, int(alu_dic[t]) + 1)]
-    z3_alu_loc_vec_transpose = [[z3_alu_loc_vec[i][j] for i in range(len(z3_alu_loc_vec))] for j in range(len(z3_alu_loc_vec[0]))]
+    print(z3_table_loc_vec)
+    
+    z3_alu_loc_vec = []
+    for t in table_size_dic:
+        for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+            for action in table_act_dic[t]:
+                for alu in action_alu_dic[t][action]:
+                    curr_list = []
+                    for j in range(num_of_stages):
+                        curr_list.append(Int('%s_M%s_%s_%s_stage%s' % (t, i, action, alu, j)))
+                    z3_alu_loc_vec.append(curr_list)
     # print(z3_alu_loc_vec)
-    # print(z3_alu_loc_vec_transpose)
-    # sys.exit(1)
-    '''
+    
+    # Constraint 0: all binary variable should be either 0 or 1
+    binary_c = []
+    for mem in z3_table_loc_vec:
+        for v in mem:
+            binary_c.append(And(v >= 0, v <= 1))
+    for mem in z3_alu_loc_vec:
+        for v in mem:
+            binary_c.append(And(v >= 0, v <= 1))
+
     # Constraint 1: Match happens before any action (DONE)
     match_then_action_c = []
     for table in alu_dep_dic:
@@ -75,27 +87,86 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                     alu1 = pair[0]
                     alu2 = pair[1]
                     alu_level_c.append(And(Int('%s_M%s_%s_%s' % (table, i, action, alu1)) < Int('%s_M%s_%s_%s' % (table, i, action, alu2))))
-    print(alu_level_c)
-    sys.exit(0)
+    # print(alu_level_c)
 
     # Constraint 4: No use more tables than available per stage (DONE)
     num_table_c = []
     for i in range(len(z3_table_loc_vec)):
-        num_table_c.append(Sum(z3_table_loc_vec[i]) <= num_of_table_per_stage)
+        num_table_c.append(And(Sum(z3_table_loc_vec[i]) <= num_of_table_per_stage))
         for j in range(len(z3_table_loc_vec[i])):
             num_table_c.append(And(z3_table_loc_vec[i][j] >= 0, z3_table_loc_vec[i][j] <= 1))
 
-    # Constraint 4: An ALU must be allocated to one and exactly one block
+    # Constraint 5: An ALU must be allocated to one and exactly one block
     alu_pos_rel_c = []
-    for i in range(len(z3_alu_list)):
-        for k in range(total_stage):
-            alu_pos_rel_c.append(Implies(z3_alu_list[i] == k, z3_alu_loc_vec[i][k] == 1))
+    for mem in z3_alu_loc_vec:
+        alu_pos_rel_c.append(Sum(mem) == 1)
+    for t in table_size_dic:
+        for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+            for action in table_act_dic[t]:
+                for alu in action_alu_dic[t][action]:
+                    for j in range(num_of_stages):
+                        alu_pos_rel_c.append(Implies(Int('%s_M%s_%s_%s_stage%s' % (t, i, action, alu, j))==1, Int('%s_M%s_%s_%s' % (t, i, action, alu))==j ))
+                        alu_pos_rel_c.append(Implies(Int('%s_M%s_%s_%s' % (t, i, action, alu))==j, Int('%s_M%s_%s_%s_stage%s' % (t, i, action, alu, j))==1))
+    print(alu_pos_rel_c)
 
-    alu_pos_val_c = [(z3_alu_loc_vec[i][j] >= 0) for i in range(len(z3_alu_loc_vec)) for j in range(len(z3_alu_loc_vec[0]))]
-    alu_row_sum_c = [Sum(z3_alu_loc_vec[i]) == 1 for i in range(len(z3_alu_loc_vec))]
-    alu_col_sum_c = [Sum(z3_alu_loc_vec_transpose[i]) <= avail_alu for i in range(len(z3_alu_loc_vec_transpose))]
+    tmp_state_field_loc_vec = []
+    # Create beg and end for tmp and stateful
+    for tmp_field in tmp_fields_def:
+        tmp_l = []
+        for i in range(num_of_stages):
+            tmp_l.append(Int('%s_stage%s' % (tmp_field, i)))
+        tmp_state_field_loc_vec.append(tmp_l)
+        curr_beg = Int('%s_beg' % tmp_field)
+        curr_end = Int('%s_end' % tmp_field)
+        alu_pos_rel_c.append(And(curr_beg >= 0))
+        alu_pos_rel_c.append(And(curr_beg < num_of_stages))
+        alu_pos_rel_c.append(And(curr_end >= 0))
+        alu_pos_rel_c.append(And(curr_end < num_of_stages))
+        for j in range(len(tmp_alu_dic[tmp_field])):
+            mem = tmp_alu_dic[tmp_field][j]
+            table = mem[0]
+            action = mem[1]
+            alu = mem[2]
+            if j == 0:
+                for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+                    alu_pos_rel_c.append(And(curr_beg == Int('%s_M%s_%s_%s' % (table, i, action, alu))))
+                    alu_pos_rel_c.append(And(curr_beg + 1 <= curr_end))
+            else:
+                for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+                    alu_pos_rel_c.append(And(curr_end >= Int('%s_M%s_%s_%s' % (table, i, action, alu))))
+    
+    for state_var in stateful_var_def:
+        tmp_l = []
+        for i in range(num_of_stages):
+            tmp_l.append(Int('%s_stage%s' % (state_var, i)))
+        tmp_state_field_loc_vec.append(tmp_l)
+        curr_beg = Int('%s_beg' % state_var)
+        curr_end = Int('%s_end' % state_var)
+        alu_pos_rel_c.append(And(curr_beg >= 0))
+        alu_pos_rel_c.append(And(curr_beg < num_of_stages))
+        alu_pos_rel_c.append(And(curr_end >= 0))
+        alu_pos_rel_c.append(And(curr_end < num_of_stages))
+        for j in range(len(state_alu_dic[state_var])):
+            mem = state_alu_dic[state_var][j]
+            table = mem[0]
+            action = mem[1]
+            alu = mem[2]
+            if j == 0:
+                for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+                    alu_pos_rel_c.append(And(curr_beg == Int('%s_M%s_%s_%s' % (table, i, action, alu))))
+                    alu_pos_rel_c.append(And(curr_beg + 1 <= curr_end))
+            else:
+                for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table)):
+                    alu_pos_rel_c.append(And(curr_end >= Int('%s_M%s_%s_%s' % (table, i, action, alu))))
+    for mem in tmp_state_field_loc_vec:
+        for v in mem:
+            binary_c.append(And(v >= 0, v <= 1))
 
-    # Constraint 5: set a variable cost which is our objective function whose value is >= to any other vars (DONE)
+    tmp_state_field_loc_vec_transpose = [[tmp_state_field_loc_vec[i][j] for i in range(len(tmp_state_field_loc_vec))] for j in range(len(tmp_state_field_loc_vec[0]))]
+    for i in range(len(tmp_state_field_loc_vec_transpose)):
+        alu_pos_rel_c.append(And(Sum(tmp_state_field_loc_vec_transpose[i]) <= (num_of_alus_per_stage - used_alu) ))
+
+    # Constraint 6: set a variable cost which is our objective function whose value is >= to any other vars (DONE)
     cost = Int('cost')
     cost_with_match_c = [And(cost >= m_v) for m_v in z3_match_list]
     cost_with_alu_c = [And(cost >= alu_v) for alu_v in z3_alu_list]
@@ -145,27 +216,63 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     print("Come here------------------------")
     set_option("parallel.enable", True)
     opt = Optimize()
-    opt.add(match_then_action_c + 
+    opt.add(binary_c +
+            match_then_action_c + 
             match_stage_c + alu_stage_c +
             alu_level_c + 
-            alu_pos_rel_c + alu_pos_val_c + alu_row_sum_c + alu_col_sum_c +
-            cost_with_match_c + cost_with_alu_c + 
+            num_table_c + 
+            alu_pos_rel_c + 
+            cost_with_match_c + cost_with_alu_c +
             table_dep_c)
-    h = opt.minimize(cost)
-    print(opt.check())
-    print(opt.model())
+    # opt
+    opt.minimize(cost)
+    # sat
+    # cost1 = Int('cost1')
+    # opt.minimize(cost1)
+    if opt.check() == sat:
+        print("Achieve satisfiable solution")
+    else:
+        print("No solution")
+    # print(opt.model())
+    for v in opt.model():
+        if str(v).find('stage') == -1:
+            print(v, '=' ,opt.model()[v])
     # Output the obective function's value Ref:https://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/guide-examples.htm
     print('objective function cost = %s' % opt.model()[cost])
     # TODO: output the layout of ALU grid
 
 def main(argv):
     """main program."""
+    '''*****************test case 1: stateful_fw*****************'''
+    '''
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4']
+    tmp_fields_def = ['tmp_0','tmp1','tmp2','tmp3'] # all temporary variables
+    stateful_var_def = ['s0'] # all stateful variables
+
+    table_act_dic = {'T1':['A1']} #key: table name, val: list of actions
+    table_size_dic = {'T1':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4','ALU5','ALU6','ALU7']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
+    #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T1': {'A1': [['ALU2','ALU7'], ['ALU6','ALU3'], ['ALU6','ALU7'],
+                                ['ALU3','ALU4'], ['ALU4','ALU5'], ['ALU7','ALU5']]}}
+    pkt_alu_dic = {'pkt_3':[['T1','A1','ALU1']], 
+                    'pkt_4':[['T1','A1','ALU5']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T1','A1','ALU2'],['T1','A1','ALU7']],
+                    'tmp1':[['T1','A1','ALU6'],['T1','A1','ALU3'],['T1','A1','ALU7']],
+                    'tmp2':[['T1','A1','ALU7'],['T1','A1','ALU5']],
+                    'tmp3':[['T1','A1','ALU4'],['T1','A1','ALU5']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
+    state_alu_dic = {'s0':[['T1','A1','ALU3']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
+    match_dep = [] #list of list, for each pari [T1, T2], T2 has match dependency on T1
+    action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
+    '''
+    '''*****************test case 2: blue_increase*****************'''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2'] # all packet fields
     tmp_fields_def = ['tmp_0'] # all temporary variables
     stateful_var_def = ['s0','s1'] # all stateful variables
 
     table_act_dic = {'T1':['A1']} # key: table name, val: list of actions
-    table_size_dic = {'T1':257} #key: table name, val: table size
+    table_size_dic = {'T1':1} #key: table name, val: table size
     action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
     #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
     alu_dep_dic = {'T1': {'A1': [['ALU1','ALU2'], ['ALU2','ALU3'], ['ALU3','ALU4']]}}
@@ -178,7 +285,6 @@ def main(argv):
     match_dep = [] #list of list, for each pari [T1, T2], T2 has match dependency on T1
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
-    
     gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         table_act_dic, table_size_dic, action_alu_dic,
                         alu_dep_dic, 
