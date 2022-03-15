@@ -8,6 +8,9 @@ num_of_alus_per_stage = 64
 num_of_table_per_stage = 8
 num_of_stages = 5
 
+# TODO: replace binary ints by bool variables and use cardinality constraints instead of sum
+# TODO: collect math.ceil(float(table_size_dic[t]) / num_of_entries_per_table) into a dictionary
+
 def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         table_act_dic, table_size_dic, action_alu_dic,
                         alu_dep_dic, 
@@ -16,19 +19,7 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         optimization):
     # Get the place where we need to newly allocate the alus
     used_alu = len(pkt_fields_def)
-    # tmp_alu = []
-    # for tmp_field in tmp_fields_def:
-    #     curr_list = []
-    #     for i in range(num_of_stages):
-    #         curr_list.append(Int('%s_stage%s' % (tmp_field, i)))
-    #     tmp_alu.append(curr_list)
-    # for state_var in stateful_var_def:
-    #     curr_list = []
-    #     for i in range(num_of_stages):
-    #         curr_list.append(Int('%s_stage%s' % (state_var, i)))
-    #     tmp_alu.append(curr_list)
-    # print(tmp_alu)
-    # Get the match and alu list
+    
     z3_match_list = [Int('%s_M%s' % (t, i)) for t in table_size_dic for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table))]
     z3_alu_list = [Int('%s_M%s_%s_%s' % (t, i, action, alu)) for t in table_size_dic for i in range(math.ceil(float(table_size_dic[t]) / num_of_entries_per_table))
     for action in table_act_dic[t] for alu in action_alu_dic[t][action]]
@@ -269,7 +260,7 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
 def main(argv):
     """main program."""
     '''*****************test case 1: stateful_fw*****************'''
-    # '''
+    '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4']
     tmp_fields_def = ['tmp_0','tmp1','tmp2','tmp3'] # all temporary variables
     stateful_var_def = ['s0'] # all stateful variables
@@ -290,7 +281,7 @@ def main(argv):
     match_dep = [] #list of list, for each pari [T1, T2], T2 has match dependency on T1
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
-    # '''
+    '''
     '''*****************test case 2: blue_increase*****************'''
     '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2'] # all packet fields
@@ -434,6 +425,33 @@ def main(argv):
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
     '''
+
+    '''*****************test case 9: ingress_port_mapping + stateful_fw_T /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark1.txt*****************'''
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6']
+    tmp_fields_def = ['tmp_0','tmp1','tmp2','tmp3'] # all temporary variables
+    stateful_var_def = ['s0'] # all stateful variables
+
+    table_act_dic = {'T1':['A1'], 'T2':['A1']} #key: table name, val: list of actions
+    table_size_dic = {'T1':288, 'T2':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2']},
+                      'T2': {'A1' : ['ALU1','ALU2','ALU3','ALU4','ALU5','ALU6','ALU7']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
+    #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T2': {'A1': [['ALU2','ALU7'], ['ALU6','ALU3'], ['ALU6','ALU7'],
+                                ['ALU3','ALU4'], ['ALU4','ALU5'], ['ALU7','ALU5']]}}
+    pkt_alu_dic = {'pkt_0':[['T1','A1','ALU1']],
+                   'pkt_1':[['T1','A1','ALU2']],
+                   'pkt_5':[['T2','A1','ALU1']],
+                   'pkt_6':[['T2','A1','ALU5']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T2','A1','ALU2'],['T2','A1','ALU7']],
+                    'tmp1':[['T2','A1','ALU6'],['T2','A1','ALU3'],['T2','A1','ALU7']],
+                    'tmp2':[['T2','A1','ALU7'],['T2','A1','ALU5']],
+                    'tmp3':[['T2','A1','ALU4'],['T2','A1','ALU5']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
+    state_alu_dic = {'s0':[['T2','A1','ALU3']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
+    match_dep = [['T1','T2']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
+
+    action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
+
     optimization = True
     gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         table_act_dic, table_size_dic, action_alu_dic,
