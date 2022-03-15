@@ -482,6 +482,7 @@ def main(argv):
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
     '''
     '''*****************test case 9: ingress_port_mapping + stateful_fw_T /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark1.txt*****************'''
+    '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6']
     tmp_fields_def = ['tmp_0','tmp1','tmp2','tmp3'] # all temporary variables
     stateful_var_def = ['s0'] # all stateful variables
@@ -502,6 +503,35 @@ def main(argv):
                     'tmp2':[['T2','A1','ALU7'],['T2','A1','ALU5']],
                     'tmp3':[['T2','A1','ALU4'],['T2','A1','ALU5']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
     state_alu_dic = {'s0':[['T2','A1','ALU3']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
+    match_dep = [['T1','T2']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
+
+    action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
+    '''
+
+    '''*****************test case 10: validate_outer_ipv4_packet + stateful_fw_T /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark2.txt*****************'''
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6', 'pkt_7', 'pkt_8', 'pkt_9', 'pkt_10', 'pkt_11', 'pkt_12', 'pkt_13']
+    tmp_fields_def = ['tmp_0','tmp_1','tmp_2','tmp_3'] # all temporary variables
+    stateful_var_def = ['s0'] # all stateful variables
+
+    table_act_dic = {'T1':['A1','A2'], 'T2':['A1']} #key: table name, val: list of actions
+    table_size_dic = {'T1':512, 'T2':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3'], 'A2': ['ALU1','ALU2']},
+                      'T2': {'A1' : ['ALU1','ALU2','ALU3','ALU4','ALU5','ALU6','ALU7']}} #key: table name, val: dictionary whose key is action name and whose value is list of alus
+    #key: table name, val: dictionary whose key is action name and whose value is list of pairs showing dependency among alus
+    alu_dep_dic = {'T2': {'A1': [['ALU2','ALU7'], ['ALU6','ALU3'], ['ALU6','ALU7'],
+                                ['ALU3','ALU4'], ['ALU4','ALU5'], ['ALU7','ALU5']]}}
+    pkt_alu_dic = {'pkt_0':[['T1','A1','ALU1']],
+                   'pkt_1':[['T1','A1','ALU2']],
+                   'pkt_5':[['T1','A2','ALU1']],
+                   'pkt_6':[['T1','A2','ALU2']],
+                   'pkt_12' :[['T2','A1','ALU1']],
+                   'pkt_13' :[['T2','A1','ALU5']]} #key: packet field in def, val: a list of list of size 3, [['table name', 'action name', 'alu name']], the corresponding alu modifies the key field
+    tmp_alu_dic = {'tmp_0':[['T2','A1','ALU2'],['T2','A1','ALU7']],
+                    'tmp_1':[['T2','A1','ALU6'],['T2','A1','ALU3'],['T2','A1','ALU7']],
+                    'tmp_2':[['T2','A1','ALU7'],['T2','A1','ALU5']],
+                    'tmp_3':[['T2','A1','ALU4'],['T2','A1','ALU5']]} #key: tmp packet fields, val: a list of list of size 3, [['table name', 'action name', 'alu name']]
+    state_alu_dic = {'s0':[['T2','A1','ALU3'], ['T2','A1','ALU4']]} #key: packet field in def, val: a list of size 3, ['table name', 'action name', 'alu name'], the corresponding alu modifies the key stateful var
     match_dep = [['T1','T2']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
 
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
