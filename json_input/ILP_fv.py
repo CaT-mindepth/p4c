@@ -139,7 +139,9 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                     for j in range(num_of_stages):
                         alu_stage_var = m.getVarByName("%s_M%s_%s_%s_stage%s" % (table, i, action, alu, j))
                         match_var_stage = m.getVarByName("%s_M%s_stage%s" % (table, i, j))
+                        # m.addConstr(alu_stage_var <= match_var_stage)
                         m.addConstr((alu_stage_var == 1) >> (match_var_stage == 1))
+                        # TODO: change to ILP constraints
                         m.addConstr((alu_stage_var == 1) >> (alu_var == j))
                         m.addConstr((match_var_stage == 1) >> (match_var >= j))
 
@@ -576,6 +578,7 @@ def main(argv):
     '''
     '''*****************test case 12: ingress_port_mapping + validate_outer_ipv4_packet + 
                                       stateful_fw_T + blue_increase /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark4.txt*****************'''
+    # '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6', 'pkt_7', 'pkt_8', 'pkt_9', 'pkt_10', 'pkt_11', 'pkt_12', 'pkt_13',
                      'pkt_14', 'pkt_15', 'pkt_16', 'pkt_17', 'pkt_18']
 
@@ -614,7 +617,7 @@ def main(argv):
 
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1 
-
+    # '''
     opt = True
     solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,

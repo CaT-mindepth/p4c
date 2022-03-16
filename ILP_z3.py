@@ -247,7 +247,11 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             table_dep_c)
         if s.check() == sat:
             print("Achieve a solution")
+            var_l = []
             for v in s.model():
+                var_l.append(v)
+            var_l.sort(key=compare_func)
+            for v in var_l:
                 if str(v).find('stage') == -1:
                     print(v, '=', s.model()[v])
         else:
@@ -518,6 +522,7 @@ def main(argv):
     '''
     '''*****************test case 12: ingress_port_mapping + validate_outer_ipv4_packet +
                                       stateful_fw_T + blue_increase /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark4.txt*****************'''
+    # '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6', 'pkt_7', 'pkt_8', 'pkt_9', 'pkt_10', 'pkt_11', 'pkt_12', 'pkt_13',
                      'pkt_14', 'pkt_15', 'pkt_16', 'pkt_17', 'pkt_18']
 
@@ -556,7 +561,7 @@ def main(argv):
 
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
-
+    # '''
     optimization = True
     gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         table_act_dic, table_size_dic, action_alu_dic,
