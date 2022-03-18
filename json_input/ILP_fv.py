@@ -238,12 +238,12 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             end_var = m.getVarByName("%s_end" % state_var)
             for i in range(num_of_stages):
                 # beg <= i < end -> allocate one alu for this stateful var
-                new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+                new_var = m.addVar(name='x%s' % global_cnt, vtype=GRB.BINARY)
                 stage_var = m.getVarByName("%s_stage%s" % (state_var, i))
                 m.addGenConstrIndicator(new_var, True, beg_var <= i)
                 m.addGenConstrIndicator(new_var, False, beg_var >= i + 1)
                 global_cnt += 1
-                new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.INTEGER)
+                new_var1 = m.addVar(name='x%s' % global_cnt, vtype=GRB.BINARY)
                 m.addGenConstrIndicator(new_var1, True, end_var >= i + 1)
                 m.addGenConstrIndicator(new_var1, False, end_var <= i)
                 m.addConstr(stage_var == new_var1 * new_var)
@@ -290,6 +290,7 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             if v.varName in var_l or v.varName == 'cost':
                 print('%s %g' % (v.varName, v.x))
         print("************************************************")
+        # print(m.getJSONSolution())
     else:
         print("Sad")
 
