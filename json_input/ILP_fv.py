@@ -250,10 +250,10 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                 global_cnt += 1
 
     m.update()
-
-    tmp_state_field_loc_vec_transpose = [[tmp_state_field_loc_vec[i][j] for i in range(len(tmp_state_field_loc_vec))] for j in range(len(tmp_state_field_loc_vec[0]))]
-    for i in range(len(tmp_state_field_loc_vec_transpose)):
-        m.addConstr(sum(tmp_state_field_loc_vec_transpose[i]) <= num_of_alus_per_stage - num_of_fields)
+    if len(tmp_state_field_loc_vec) > 0:
+        tmp_state_field_loc_vec_transpose = [[tmp_state_field_loc_vec[i][j] for i in range(len(tmp_state_field_loc_vec))] for j in range(len(tmp_state_field_loc_vec[0]))]
+        for i in range(len(tmp_state_field_loc_vec_transpose)):
+            m.addConstr(sum(tmp_state_field_loc_vec_transpose[i]) <= num_of_alus_per_stage - num_of_fields)
 
     '''Start solving the ILP optimization problem'''
     if opt == True:
@@ -290,7 +290,7 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
             if v.varName in var_l or v.varName == 'cost':
                 print('%s %g' % (v.varName, v.x))
         print("************************************************")
-        # print(m.getJSONSolution())
+        print(m.getJSONSolution())
     else:
         print("Sad")
 
@@ -579,7 +579,7 @@ def main(argv):
     '''
     '''*****************test case 12: ingress_port_mapping + validate_outer_ipv4_packet + 
                                       stateful_fw_T + blue_increase /home/xiangyug/benchmarks/switch_p4_benchmarks/test_benchmarks/benchmark4.txt*****************'''
-    # '''
+    '''
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6', 'pkt_7', 'pkt_8', 'pkt_9', 'pkt_10', 'pkt_11', 'pkt_12', 'pkt_13',
                      'pkt_14', 'pkt_15', 'pkt_16', 'pkt_17', 'pkt_18']
 
@@ -618,7 +618,26 @@ def main(argv):
 
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1 
-    # '''
+    '''
+    pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6']
+    tmp_fields_def = []
+    stateful_var_def = []
+    table_act_dic = {'T1':['A1']}
+    table_size_dic = {'T1':1} #key: table name, val: table size
+    action_alu_dic = {'T1': {'A1' : ['ALU1','ALU2','ALU3','ALU4','ALU5','ALU6']}}
+    alu_dep_dic = {}
+    pkt_alu_dic = {'pkt_1':[['T1','A1','ALU1']], 
+                'pkt_2':[['T1','A1','ALU2']],
+                'pkt_3':[['T1','A1','ALU3']],
+                'pkt_4':[['T1','A1','ALU4']],
+                'pkt_5':[['T1','A1','ALU5']],
+                'pkt_6':[['T1','A1','ALU6']]}
+    tmp_alu_dic = {}
+    state_alu_dic = {}
+    match_dep = []
+    action_dep = []
+    reverse_dep = []
+
     opt = True
     solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
