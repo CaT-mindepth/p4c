@@ -17,7 +17,30 @@ entries_per_table = 256
 def int_to_bin_str(v, length):
     return str(format(v, 'b').zfill(length))
 
+def parse_json(ILP_alloc):
+    var_val_dict = {}
+    for i in range(len(ILP_alloc['Vars'])):
+        curr_var = ILP_alloc['Vars'][i]['VarName']
+        curr_value = ILP_alloc['Vars'][i]['X']
+        var_val_dict[curr_var] = curr_value
+    return var_val_dict
+
+def gen_table_stage_alloc(var_val_dict, table_match_part_dic, cost):
+    used_table_dict = {}
+    for i in range(cost):
+        used_table_dict[i] = []    
+    for i in range(cost):
+        for table in table_match_part_dic:
+            for size in range(table_match_part_dic[table]):
+                var_name = "%s_M%s_stage%s" % (table, size, i)
+                # print("var_name =" ,var_name)
+                if var_name in var_val_dict:
+                    assert var_val_dict[var_name] == 1
+                    used_table_dict[i].append(table)
+    return used_table_dict
+
 def main(argv):
+
     # get useful info from ILP
     pkt_fields_def = ['pkt_0', 'pkt_1', 'pkt_2', 'pkt_3', 'pkt_4', 'pkt_5', 'pkt_6']
     table_size_dic = {'T1':1} #key: table name, val: table size
@@ -30,6 +53,8 @@ def main(argv):
                 'pkt_4':[['T1','A1','ALU4']],
                 'pkt_5':[['T1','A1','ALU5']],
                 'pkt_6':[['T1','A1','ALU6']]}
+
+    
     stage_dic = {'T1_M0_A1_ALU1' : 0,
                 'T1_M0_A1_ALU2' : 0,
                 'T1_M0_A1_ALU3' : 0,
@@ -45,7 +70,12 @@ def main(argv):
 
     table_match_part_dic = {} # key: table name, val: how many match components
     for tbl in table_size_dic:
-        table_size_dic[tbl] = math.ceil(table_size_dic[tbl] / float(entries_per_table))
+        table_match_part_dic[tbl] = math.ceil(table_size_dic[tbl] / float(entries_per_table))
+    
+    # turn ILP's allocation output to a dictionary (Only have non-zero value)
+    ILP_alloc = { "SolutionInfo": { "Status": 2, "Runtime": 1.4585018157958984e-02, "Work": 6.6782390529321238e-03, "ObjVal": 2, "ObjBound": 2, "ObjBoundC": 2, "MIPGap": 0, "IntVio": 0, "BoundVio": 0, "ConstrVio": 0, "IterCount": 0, "BarIterCount": 0, "NodeCount": 0, "SolCount": 1, "PoolObjBound": 2, "PoolObjVal": [ 2]}, "Vars": [ { "VarName": "cost", "X": 2}, { "VarName": "T1_M0", "X": 2}, { "VarName": "T1_M0_A1_ALU1_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU2_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU3_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU4", "X": 1}, { "VarName": "T1_M0_A1_ALU4_stage1", "X": 1}, { "VarName": "T2_M0", "X": 2}, { "VarName": "T2_M0_A1_ALU1", "X": 2}, { "VarName": "T2_M0_A1_ALU1_stage2", "X": 1}, { "VarName": "T1_M0_stage0", "X": 1}, { "VarName": "T1_M0_stage1", "X": 1}, { "VarName": "T1_M0_stage2", "X": 1}, { "VarName": "T2_M0_stage1", "X": 1}, { "VarName": "T2_M0_stage2", "X": 1}, { "VarName": "tmp_0_end", "X": 1}, { "VarName": "tmp_0_stage0", "X": 1}, { "VarName": "x0", "X": 1}, { "VarName": "x1", "X": 1}, { "VarName": "x2", "X": 1}, { "VarName": "x4", "X": 1}, { "VarName": "x6", "X": 1}, { "VarName": "x8", "X": 1}, { "VarName": "x10", "X": 1}, { "VarName": "x12", "X": 1}, { "VarName": "x14", "X": 1}, { "VarName": "x16", "X": 1}, { "VarName": "x18", "X": 1}, { "VarName": "x20", "X": 1}, { "VarName": "x22", "X": 1}, { "VarName": "s0_beg", "X": 1}, { "VarName": "s0_end", "X": 2}, { "VarName": "s0_stage1", "X": 1}, { "VarName": "x25", "X": 1}, { "VarName": "x26", "X": 1}, { "VarName": "x27", "X": 1}, { "VarName": "x28", "X": 1}, { "VarName": "x30", "X": 1}, { "VarName": "x32", "X": 1}, { "VarName": "x34", "X": 1}, { "VarName": "x36", "X": 1}, { "VarName": "x38", "X": 1}, { "VarName": "x40", "X": 1}, { "VarName": "x42", "X": 1}, { "VarName": "x44", "X": 1}, { "VarName": "x46", "X": 1}]}
+    var_val_dict = parse_json(ILP_alloc)
+    print("var_val_dict =", var_val_dict)
 
     num_of_pkts_in_def = len(pkt_fields_def)
     pkt_container_dic = {} # key: pkt_field, val: container idx
@@ -75,9 +105,17 @@ def main(argv):
             tmp_str += "000000000000000000000000"
     out_str += tmp_str + "\n"
     # print(out_str)
-    cost = 1
+    
+    # get total number of stages from json output
+    if 'cost' in var_val_dict:
+        cost = var_val_dict['cost'] + 1 
+    else:
+        cost = 1
     used_stage = cost
-    used_table_dic = {0 : 1}
+    used_table_dict = {} # key: stage number; val: list of tables appear in that stage
+    used_table_dict = gen_table_stage_alloc(var_val_dict, table_match_part_dic, cost)
+    print("used_table_dict =", used_table_dict)
+    sys.exit(0)
     for i in range(used_stage):
         used_table = used_table_dic[i]
         for j in range(used_table):
