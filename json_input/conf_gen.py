@@ -39,6 +39,13 @@ def gen_table_stage_alloc(var_val_dict, table_match_part_dic, cost):
                     used_table_dict[i].append(table)
     return used_table_dict
 
+def get_modified_pkt(table_name, action_name, alu, pkt_alu_dic):
+    l_to_find = [table_name, action_name, alu]
+    for pkt_field in pkt_alu_dic:
+        if l_to_find in pkt_alu_dic[pkt_field]:
+            return pkt_field
+    return -1
+
 def main(argv):
 
     # get useful info from ILP
@@ -54,13 +61,6 @@ def main(argv):
                 'pkt_5':[['T1','A1','ALU5']],
                 'pkt_6':[['T1','A1','ALU6']]}
 
-    
-    stage_dic = {'T1_M0_A1_ALU1' : 0,
-                'T1_M0_A1_ALU2' : 0,
-                'T1_M0_A1_ALU3' : 0,
-                'T1_M0_A1_ALU4' : 0,
-                'T1_M0_A1_ALU5' : 0,
-                'T1_M0_A1_ALU6' : 0} # key: variable name, val: stage number
     update_var_dic = {'T1_A1_ALU1' : 1,
                 'T1_A1_ALU2' : 2,
                 'T1_A1_ALU3' : 3,
@@ -73,9 +73,9 @@ def main(argv):
         table_match_part_dic[tbl] = math.ceil(table_size_dic[tbl] / float(entries_per_table))
     
     # turn ILP's allocation output to a dictionary (Only have non-zero value)
-    ILP_alloc = { "SolutionInfo": { "Status": 2, "Runtime": 1.4585018157958984e-02, "Work": 6.6782390529321238e-03, "ObjVal": 2, "ObjBound": 2, "ObjBoundC": 2, "MIPGap": 0, "IntVio": 0, "BoundVio": 0, "ConstrVio": 0, "IterCount": 0, "BarIterCount": 0, "NodeCount": 0, "SolCount": 1, "PoolObjBound": 2, "PoolObjVal": [ 2]}, "Vars": [ { "VarName": "cost", "X": 2}, { "VarName": "T1_M0", "X": 2}, { "VarName": "T1_M0_A1_ALU1_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU2_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU3_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU4", "X": 1}, { "VarName": "T1_M0_A1_ALU4_stage1", "X": 1}, { "VarName": "T2_M0", "X": 2}, { "VarName": "T2_M0_A1_ALU1", "X": 2}, { "VarName": "T2_M0_A1_ALU1_stage2", "X": 1}, { "VarName": "T1_M0_stage0", "X": 1}, { "VarName": "T1_M0_stage1", "X": 1}, { "VarName": "T1_M0_stage2", "X": 1}, { "VarName": "T2_M0_stage1", "X": 1}, { "VarName": "T2_M0_stage2", "X": 1}, { "VarName": "tmp_0_end", "X": 1}, { "VarName": "tmp_0_stage0", "X": 1}, { "VarName": "x0", "X": 1}, { "VarName": "x1", "X": 1}, { "VarName": "x2", "X": 1}, { "VarName": "x4", "X": 1}, { "VarName": "x6", "X": 1}, { "VarName": "x8", "X": 1}, { "VarName": "x10", "X": 1}, { "VarName": "x12", "X": 1}, { "VarName": "x14", "X": 1}, { "VarName": "x16", "X": 1}, { "VarName": "x18", "X": 1}, { "VarName": "x20", "X": 1}, { "VarName": "x22", "X": 1}, { "VarName": "s0_beg", "X": 1}, { "VarName": "s0_end", "X": 2}, { "VarName": "s0_stage1", "X": 1}, { "VarName": "x25", "X": 1}, { "VarName": "x26", "X": 1}, { "VarName": "x27", "X": 1}, { "VarName": "x28", "X": 1}, { "VarName": "x30", "X": 1}, { "VarName": "x32", "X": 1}, { "VarName": "x34", "X": 1}, { "VarName": "x36", "X": 1}, { "VarName": "x38", "X": 1}, { "VarName": "x40", "X": 1}, { "VarName": "x42", "X": 1}, { "VarName": "x44", "X": 1}, { "VarName": "x46", "X": 1}]}
+    ILP_alloc = { "SolutionInfo": { "Status": 2, "Runtime": 6.4218044281005859e-03, "Work": 2.6063138945517767e-03, "ObjVal": 0, "ObjBound": 0, "ObjBoundC": 0, "MIPGap": 0, "IntVio": 0, "BoundVio": 0, "ConstrVio": 0, "IterCount": 0, "BarIterCount": 0, "NodeCount": 0, "SolCount": 1, "PoolObjBound": 0, "PoolObjVal": [ 0]}, "Vars": [ { "VarName": "T1_M0_A1_ALU1_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU2_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU3_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU4_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU5_stage0", "X": 1}, { "VarName": "T1_M0_A1_ALU6_stage0", "X": 1}, { "VarName": "T1_M0_stage0", "X": 1}]}
     var_val_dict = parse_json(ILP_alloc)
-    print("var_val_dict =", var_val_dict)
+    # print("var_val_dict =", var_val_dict)
 
     num_of_pkts_in_def = len(pkt_fields_def)
     pkt_container_dic = {} # key: pkt_field, val: container idx
@@ -114,14 +114,17 @@ def main(argv):
     used_stage = cost
     used_table_dict = {} # key: stage number; val: list of tables appear in that stage
     used_table_dict = gen_table_stage_alloc(var_val_dict, table_match_part_dic, cost)
-    print("used_table_dict =", used_table_dict)
-    sys.exit(0)
+    # print("used_table_dict =", used_table_dict)
     for i in range(used_stage):
-        used_table = used_table_dic[i]
+        used_table = len(used_table_dict[i])
         for j in range(used_table):
+            # For now, we think if more than one match component of a table is in the same stage,
+            # then only one of them will be used to execute the match/action rule
+            if j > 0 and used_table_dict[j] == used_table_dict[j - 1]:
+                continue
             # KeyExtractConf
             # get Info required (e.g., stage number, match field idx, table number etc.)
-            table_name = 'T1' # TODO: get it from ILP's output
+            table_name = used_table_dict[i][j] # get it from ILP's output
             key_extract_str = "KeyExtractConf " + int_to_bin_str(i, 5) + int_to_bin_str(module_id['KeyExtractConf'], 3) +\
                 int_to_bin_str(j, 4) + "0000" + "00000001\n"
             match_fields_l = match_field_dic[table_name]
@@ -170,28 +173,41 @@ def main(argv):
             # RAMConf
             ram_conf_str = "RAMConf " + int_to_bin_str(i, 5) + int_to_bin_str(module_id['RAMConf'], 3) +\
                 int_to_bin_str(j, 4) + "1111" + "00000000\n"
+            # match_action_rule = {'T1' : [({'pkt_0' : 5}, 'A1')]}
             action_name = match_action_rule[table_name][0][1]
             alu_l = action_alu_dic[table_name][action_name]
-            for k in range(num_of_phv - 1, -1, -1):
-                if k < len(pkt_fields_def):
-                    packet_field = pkt_fields_def[k]
-                    if packet_field not in pkt_alu_dic:
-                        ram_conf_str += "0000000000000000000000000000000000000000000000000000000000000000"
-                        continue
-                    for mem in pkt_alu_dic[packet_field]:
-                        for size in range(table_size_dic[table_name]):
-                            alu_name = '%s_M%s_%s_%s' % (mem[0], size, mem[1], mem[2])
-                            if stage_dic[alu_name] == i:
-                                # TODO: expand to more functions in addition to set
-                                alu_func_name = '%s_%s_%s' % (mem[0], mem[1], mem[2])
-                                update_val = update_var_dic[alu_func_name]
-                                ram_conf_str += "00001110" + int_to_bin_str(pkt_container_dic[packet_field], 6) +\
-                                     int_to_bin_str(update_val, 50)
-                            else:
-                                ram_conf_str += "0000000000000000000000000000000000000000000000000000000000000000"
-                else:
-                    ram_conf_str += "0000000000000000000000000000000000000000000000000000000000000000"
-            ram_conf_str += "0000000000000000000000000000000000000000000000000000000000000000\n"
+            # print("alu_l =", alu_l)
+            
+            
+            ram_list = ["0000000000000000000000000000000000000000000000000000000000000000"] * 65
+            for k in range(num_of_match_field):
+                for alu in alu_l:
+                    var_name = "%s_M%s_%s_%s" % (table_name, k, action_name, alu)
+                    # find which stage all alus in alu_l are allocated
+                    if var_name not in var_val_dict:
+                        stage_of_this_alu = 0
+                    else:
+                        stage_of_this_alu = var_val_dict[var_name]
+                    # if one particular alu is allocated in this stage, we should set the configuration
+                    if stage_of_this_alu == i:
+                        # find which packet field is modified by this alu
+                        packet_field = get_modified_pkt(table_name, action_name, alu, pkt_alu_dic)
+                        if packet_field == -1:
+                            # TODO: consider the case where the ALU is used to modify tmp field/stateful vars
+                            print("Not modify fields in definition")
+                            sys.exit(0)
+                        else:
+                            alu_func_name = "%s_%s_%s" % (table_name, action_name, alu)
+                            update_val = update_var_dic[alu_func_name]
+                            tmp_str = "00001110" + int_to_bin_str(pkt_container_dic[packet_field], 6) +\
+                                    int_to_bin_str(update_val, 50)
+                            
+                            ram_list[num_of_phv - 1 - pkt_container_dic[packet_field]] = tmp_str
+
+            # Add to ram_conf_str
+            for content in ram_list:
+                ram_conf_str += content
+            ram_conf_str += "\n"
             
             out_str += ram_conf_str
             
