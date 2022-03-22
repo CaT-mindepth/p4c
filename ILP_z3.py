@@ -18,7 +18,7 @@ def gen_and_solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                         table_act_dic, table_size_dic, action_alu_dic,
                         alu_dep_dic, 
                         pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-                        match_dep, action_dep, reverse_dep,
+                        match_dep, action_dep, successor_dep, reverse_dep,
                         optimization):
     # Get the place where we need to newly allocate the alus
     used_alu = len(pkt_fields_def)
@@ -560,6 +560,7 @@ def main(argv):
     match_dep = [['T1','T3'], ['T2','T4']] #list of list, for each pari [T1, T2], T2 has match dependency on T1
 
     action_dep = [] #list of list, for each pari [T1, T2], T2 has action dependency on T1
+    successor_dep = []
     reverse_dep = [] #list of list, for each pari [T1, T2], T2 has reverse dependency on T1
     # '''
     optimization = True
@@ -567,7 +568,7 @@ def main(argv):
                         table_act_dic, table_size_dic, action_alu_dic,
                         alu_dep_dic, 
                         pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-                        match_dep, action_dep, reverse_dep,
+                        match_dep, action_dep, successor_dep, reverse_dep,
                         optimization)
 
 if __name__ == "__main__":
