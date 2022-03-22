@@ -13,7 +13,7 @@ num_of_stages = 12
 def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, reverse_dep, opt = True):
+    match_dep, action_dep, successor_dep, reverse_dep, opt = True):
 
     global_cnt = 0
     num_of_fields = len(pkt_fields_def)
@@ -100,6 +100,21 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
                                 m.addConstr(table1_alu_var <= table2_alu_var - 1)
 
     for pair in reverse_dep:
+        table1 = pair[0]
+        table2 = pair[1]
+        table1_size = table_match_dic[table1]
+        table2_size = table_match_dic[table2]
+        for i in range(table1_size):
+            for j in range(table2_size):
+                for table1_act in action_alu_dic[table1]:
+                    for table2_act in action_alu_dic[table2]:
+                        for table1_act_alu in action_alu_dic[table1][table1_act]:
+                            for table2_act_alu in action_alu_dic[table2][table2_act]:
+                                table1_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table1, i, table1_act, table1_act_alu))
+                                table2_alu_var = m.getVarByName("%s_M%s_%s_%s" % (table2, j, table2_act, table2_act_alu))
+                                m.addConstr(table1_alu_var <= table2_alu_var)
+    
+    for pair in successor_dep:
         table1 = pair[0]
         table2 = pair[1]
         table1_size = table_match_dic[table1]
@@ -637,12 +652,13 @@ def main(argv):
     match_dep = []
     action_dep = []
     reverse_dep = []
+    successor_dep = []
 
     opt = True
     solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, reverse_dep, opt)
+    match_dep, action_dep, successor_dep, reverse_dep, opt)
 
     # TODO: List all info needed for txt gen
     table_match_dic = {} #key: table name, val: list of packet fields for match
