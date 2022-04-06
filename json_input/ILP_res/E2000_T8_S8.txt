@@ -1,0 +1,27 @@
+Set parameter Username
+Academic license - for non-commercial use only - expires 2022-10-14
+Solving optimization problem
+Gurobi Optimizer version 9.5.0 build v9.5.0rc5 (linux64)
+Thread count: 28 physical cores, 56 logical processors, using up to 28 threads
+Optimize a model with 65231 rows, 6130 columns and 133997 nonzeros
+Model fingerprint: 0x59c9c687
+Model has 14568 general constraints
+Variable types: 0 continuous, 6130 integer (5448 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 8e+00]
+  GenCon rhs range [1e+00, 7e+00]
+  GenCon coe range [1e+00, 1e+00]
+Presolve removed 694 rows and 99 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds (0.02 work units)
+Thread count was 1 (of 56 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Sad

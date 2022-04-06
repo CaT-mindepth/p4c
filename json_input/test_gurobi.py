@@ -32,7 +32,9 @@ for i in range(12):
     m.addGenConstrIndicator(new_var1, True, cost2 >= i)
     m.addGenConstrIndicator(new_var1, False, cost2 <= i - 1)
     m.addConstr(stage_var == new_var1 * new_var)
-
+m.update()
+print("m.getVars() =", m.getVars())
+print("num of variable =", len(m.getVars()))
 m.setObjective(cost, GRB.MINIMIZE)
 m.optimize()
 if m.status == GRB.OPTIMAL:    

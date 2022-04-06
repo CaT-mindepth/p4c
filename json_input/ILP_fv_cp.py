@@ -5,15 +5,17 @@ import math
 import gurobipy as gp
 from gurobipy import GRB
 
-num_of_entries_per_table = 3000
-num_of_alus_per_stage = 64
-num_of_table_per_stage = 8
-num_of_stages = 40
+# num_of_entries_per_table = 256
+# num_of_alus_per_stage = 520
+# num_of_table_per_stage = 25
+# num_of_stages = 12
 
 def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, successor_dep, reverse_dep, opt = True):
+    match_dep, action_dep, successor_dep, reverse_dep, 
+    num_of_entries_per_table, num_of_table_per_stage, num_of_stages, 
+    opt = True):
 
     global_cnt = 0
     num_of_fields = len(pkt_fields_def)
@@ -52,6 +54,8 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     for var in alu_components_var:
         m.addConstr(var >= 0)
         m.addConstr(cost >= var)
+    m.addConstr(cost >= 0)
+    m.addConstr(cost <= num_of_stages - 1)
     '''it is necessary to update model before later processing
     ref: https://support.gurobi.com/hc/en-us/community/posts/360059768191-GurobiError-No-variable-names-available-to-index
     '''
@@ -277,9 +281,10 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
     else:
         m.setObjective(1, GRB.MINIMIZE)
         print("Solving satisfiable problem")
+    
     m.update()
-    print("-------------num of variable =", m.getVars())
-    sys.exit(0)
+    # print("-------------num of variable =", len(m.getVars()))
+    # sys.exit(0)
     m.optimize()
     if m.status == GRB.OPTIMAL: 
         print("Following is the result we want:*****************\n\n\n")   
@@ -313,6 +318,9 @@ def solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def,
 
 
 def main(argv):
+    num_of_entries_per_table = int(argv[1])
+    num_of_table_per_stage = int(argv[2])
+    num_of_stages = int(argv[3])
     # List all info needed for ILP
     '''
     pkt_fields_def = ['pkt_0', 'pkt_1'] # all packet fields in definition
@@ -973,7 +981,9 @@ def main(argv):
     solve_ILP(pkt_fields_def, tmp_fields_def, stateful_var_def, 
     table_act_dic, table_size_dic, action_alu_dic, alu_dep_dic,
     pkt_alu_dic, tmp_alu_dic, state_alu_dic,
-    match_dep, action_dep, successor_dep, reverse_dep, opt)
+    match_dep, action_dep, successor_dep, reverse_dep, 
+    num_of_entries_per_table, num_of_table_per_stage, num_of_stages, 
+    opt)
 
     # TODO: List all info needed for txt gen
     table_match_dic = {} #key: table name, val: list of packet fields for match
