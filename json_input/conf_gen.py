@@ -282,9 +282,12 @@ def main(argv):
                             # TODO: consider the case where the ALU is used to modify tmp field/stateful vars
                             variable_name = table_name + "_" + action_name + "_" + alu
                             assert variable_name in update_state_dic ,"Not modify fields in definition"
+                            # print("stage_dic =",stage_dic)
+                            # print("variable_name =", variable_name)
+                            # print("i =", i)
                             tmp_str = update_state_dic[variable_name]
-                            ram_list[num_of_phv - 1 - stage_dic[j]] = tmp_str
-                            stage_dic[j] += 1
+                            ram_list[num_of_phv - 1 - stage_dic[i]] = tmp_str
+                            stage_dic[i] += 1
                         else:
                             alu_func_name = "%s_%s_%s" % (table_name, action_name, alu)
                             # print("alu_func_name =", alu_func_name)
@@ -327,7 +330,7 @@ def main(argv):
 
     if out_str[-1] == '\n':
         out_str = out_str[:-1]
-    print(out_str)
+    # print(out_str)
 
 if __name__ == '__main__':
     main(sys.argv)
